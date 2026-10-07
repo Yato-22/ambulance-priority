@@ -1,0 +1,2428 @@
+{
+  "meta": {
+    "center": [
+      18.4925,
+      73.823
+    ],
+    "radius_m": 900,
+    "source": "grid",
+    "generated": "2026-10-07T16:23:25.730401+00:00"
+  },
+  "nodes": [
+    {
+      "id": 1,
+      "lat": 18.485763,
+      "lon": 73.815896,
+      "signal": false
+    },
+    {
+      "id": 2,
+      "lat": 18.485763,
+      "lon": 73.818738,
+      "signal": false
+    },
+    {
+      "id": 3,
+      "lat": 18.485763,
+      "lon": 73.821579,
+      "signal": false
+    },
+    {
+      "id": 4,
+      "lat": 18.485763,
+      "lon": 73.824421,
+      "signal": false
+    },
+    {
+      "id": 5,
+      "lat": 18.485763,
+      "lon": 73.827262,
+      "signal": false
+    },
+    {
+      "id": 6,
+      "lat": 18.485763,
+      "lon": 73.830104,
+      "signal": false
+    },
+    {
+      "id": 7,
+      "lat": 18.488458,
+      "lon": 73.815896,
+      "signal": false
+    },
+    {
+      "id": 8,
+      "lat": 18.488458,
+      "lon": 73.818738,
+      "signal": true,
+      "signal_id": "S1",
+      "signal_source": "grid_planned"
+    },
+    {
+      "id": 9,
+      "lat": 18.488458,
+      "lon": 73.821579,
+      "signal": false
+    },
+    {
+      "id": 10,
+      "lat": 18.488458,
+      "lon": 73.824421,
+      "signal": true,
+      "signal_id": "S2",
+      "signal_source": "grid_planned"
+    },
+    {
+      "id": 11,
+      "lat": 18.488458,
+      "lon": 73.827262,
+      "signal": true,
+      "signal_id": "S3",
+      "signal_source": "grid_planned"
+    },
+    {
+      "id": 12,
+      "lat": 18.488458,
+      "lon": 73.830104,
+      "signal": false
+    },
+    {
+      "id": 13,
+      "lat": 18.491153,
+      "lon": 73.815896,
+      "signal": false
+    },
+    {
+      "id": 14,
+      "lat": 18.491153,
+      "lon": 73.818738,
+      "signal": false
+    },
+    {
+      "id": 15,
+      "lat": 18.491153,
+      "lon": 73.821579,
+      "signal": true,
+      "signal_id": "S4",
+      "signal_source": "grid_planned"
+    },
+    {
+      "id": 16,
+      "lat": 18.491153,
+      "lon": 73.824421,
+      "signal": true,
+      "signal_id": "S5",
+      "signal_source": "grid_planned"
+    },
+    {
+      "id": 17,
+      "lat": 18.491153,
+      "lon": 73.827262,
+      "signal": false
+    },
+    {
+      "id": 18,
+      "lat": 18.491153,
+      "lon": 73.830104,
+      "signal": false
+    },
+    {
+      "id": 19,
+      "lat": 18.493847,
+      "lon": 73.815896,
+      "signal": false
+    },
+    {
+      "id": 20,
+      "lat": 18.493847,
+      "lon": 73.818738,
+      "signal": true,
+      "signal_id": "S6",
+      "signal_source": "grid_planned"
+    },
+    {
+      "id": 21,
+      "lat": 18.493847,
+      "lon": 73.821579,
+      "signal": true,
+      "signal_id": "S7",
+      "signal_source": "grid_planned"
+    },
+    {
+      "id": 22,
+      "lat": 18.493847,
+      "lon": 73.824421,
+      "signal": false
+    },
+    {
+      "id": 23,
+      "lat": 18.493847,
+      "lon": 73.827262,
+      "signal": true,
+      "signal_id": "S8",
+      "signal_source": "grid_planned"
+    },
+    {
+      "id": 24,
+      "lat": 18.493847,
+      "lon": 73.830104,
+      "signal": false
+    },
+    {
+      "id": 25,
+      "lat": 18.496542,
+      "lon": 73.815896,
+      "signal": false
+    },
+    {
+      "id": 26,
+      "lat": 18.496542,
+      "lon": 73.818738,
+      "signal": false
+    },
+    {
+      "id": 27,
+      "lat": 18.496542,
+      "lon": 73.821579,
+      "signal": true,
+      "signal_id": "S9",
+      "signal_source": "grid_planned"
+    },
+    {
+      "id": 28,
+      "lat": 18.496542,
+      "lon": 73.824421,
+      "signal": true,
+      "signal_id": "S10",
+      "signal_source": "grid_planned"
+    },
+    {
+      "id": 29,
+      "lat": 18.496542,
+      "lon": 73.827262,
+      "signal": false
+    },
+    {
+      "id": 30,
+      "lat": 18.496542,
+      "lon": 73.830104,
+      "signal": false
+    },
+    {
+      "id": 31,
+      "lat": 18.499237,
+      "lon": 73.815896,
+      "signal": false
+    },
+    {
+      "id": 32,
+      "lat": 18.499237,
+      "lon": 73.818738,
+      "signal": false
+    },
+    {
+      "id": 33,
+      "lat": 18.499237,
+      "lon": 73.821579,
+      "signal": false
+    },
+    {
+      "id": 34,
+      "lat": 18.499237,
+      "lon": 73.824421,
+      "signal": false
+    },
+    {
+      "id": 35,
+      "lat": 18.499237,
+      "lon": 73.827262,
+      "signal": false
+    },
+    {
+      "id": 36,
+      "lat": 18.499237,
+      "lon": 73.830104,
+      "signal": false
+    }
+  ],
+  "hospitals": [
+    {
+      "id": "H1",
+      "name": "Sahyadri Hospital (Kothrud)",
+      "node": 1
+    },
+    {
+      "id": "H2",
+      "name": "Deenanath Mangeshkar Hospital",
+      "node": 36
+    },
+    {
+      "id": "H3",
+      "name": "Mai Mangeshkar Hospital (Warje)",
+      "node": 6
+    }
+  ],
+  "edges": [
+    {
+      "from": 1,
+      "to": 2,
+      "length": 299.7,
+      "name": "Karve Road",
+      "base_congestion": 1.51,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.815896
+        ],
+        [
+          18.485763,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 2,
+      "to": 1,
+      "length": 299.7,
+      "name": "Karve Road",
+      "base_congestion": 1.02,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.818738
+        ],
+        [
+          18.485763,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 1,
+      "to": 7,
+      "length": 299.7,
+      "name": "Paud Road Link",
+      "base_congestion": 1.22,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.815896
+        ],
+        [
+          18.488458,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 7,
+      "to": 1,
+      "length": 299.7,
+      "name": "Paud Road Link",
+      "base_congestion": 1.18,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.815896
+        ],
+        [
+          18.485763,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "length": 299.6,
+      "name": "Karve Road",
+      "base_congestion": 1.59,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.818738
+        ],
+        [
+          18.485763,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 3,
+      "to": 2,
+      "length": 299.6,
+      "name": "Karve Road",
+      "base_congestion": 1.54,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.821579
+        ],
+        [
+          18.485763,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 2,
+      "to": 8,
+      "length": 299.7,
+      "name": "Kothrud Main Ave",
+      "base_congestion": 1.71,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.818738
+        ],
+        [
+          18.488458,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 8,
+      "to": 2,
+      "length": 299.7,
+      "name": "Kothrud Main Ave",
+      "base_congestion": 1.07,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.818738
+        ],
+        [
+          18.485763,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "length": 299.7,
+      "name": "Karve Road",
+      "base_congestion": 1.34,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.821579
+        ],
+        [
+          18.485763,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 4,
+      "to": 3,
+      "length": 299.7,
+      "name": "Karve Road",
+      "base_congestion": 1.02,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.824421
+        ],
+        [
+          18.485763,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 3,
+      "to": 9,
+      "length": 299.7,
+      "name": "Hingne Road",
+      "base_congestion": 1.17,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.821579
+        ],
+        [
+          18.488458,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 9,
+      "to": 3,
+      "length": 299.7,
+      "name": "Hingne Road",
+      "base_congestion": 1.4,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.821579
+        ],
+        [
+          18.485763,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 4,
+      "to": 5,
+      "length": 299.6,
+      "name": "Karve Road",
+      "base_congestion": 1.02,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.824421
+        ],
+        [
+          18.485763,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 5,
+      "to": 4,
+      "length": 299.6,
+      "name": "Karve Road",
+      "base_congestion": 1.16,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.827262
+        ],
+        [
+          18.485763,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 4,
+      "to": 10,
+      "length": 299.7,
+      "name": "Gandhi Bhavan Rd",
+      "base_congestion": 1.52,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.824421
+        ],
+        [
+          18.488458,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 10,
+      "to": 4,
+      "length": 299.7,
+      "name": "Gandhi Bhavan Rd",
+      "base_congestion": 1.44,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.824421
+        ],
+        [
+          18.485763,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 5,
+      "to": 6,
+      "length": 299.7,
+      "name": "Karve Road",
+      "base_congestion": 1.18,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.827262
+        ],
+        [
+          18.485763,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 6,
+      "to": 5,
+      "length": 299.7,
+      "name": "Karve Road",
+      "base_congestion": 1.47,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.830104
+        ],
+        [
+          18.485763,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 5,
+      "to": 11,
+      "length": 299.7,
+      "name": "Canal Road",
+      "base_congestion": 1.65,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.827262
+        ],
+        [
+          18.488458,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 11,
+      "to": 5,
+      "length": 299.7,
+      "name": "Canal Road",
+      "base_congestion": 1.01,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.827262
+        ],
+        [
+          18.485763,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 6,
+      "to": 12,
+      "length": 299.7,
+      "name": "Shastri Nagar Road",
+      "base_congestion": 1.64,
+      "oneway": false,
+      "geometry": [
+        [
+          18.485763,
+          73.830104
+        ],
+        [
+          18.488458,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 12,
+      "to": 6,
+      "length": 299.7,
+      "name": "Shastri Nagar Road",
+      "base_congestion": 1.56,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.830104
+        ],
+        [
+          18.485763,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 7,
+      "to": 8,
+      "length": 299.7,
+      "name": "DP Road",
+      "base_congestion": 1.27,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.815896
+        ],
+        [
+          18.488458,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 8,
+      "to": 7,
+      "length": 299.7,
+      "name": "DP Road",
+      "base_congestion": 1.12,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.818738
+        ],
+        [
+          18.488458,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 7,
+      "to": 13,
+      "length": 299.7,
+      "name": "Paud Road Link",
+      "base_congestion": 1.77,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.815896
+        ],
+        [
+          18.491153,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 13,
+      "to": 7,
+      "length": 299.7,
+      "name": "Paud Road Link",
+      "base_congestion": 1.27,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.815896
+        ],
+        [
+          18.488458,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 8,
+      "to": 9,
+      "length": 299.6,
+      "name": "DP Road",
+      "base_congestion": 1.07,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.818738
+        ],
+        [
+          18.488458,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 9,
+      "to": 8,
+      "length": 299.6,
+      "name": "DP Road",
+      "base_congestion": 1.08,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.821579
+        ],
+        [
+          18.488458,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 8,
+      "to": 14,
+      "length": 299.7,
+      "name": "Kothrud Main Ave",
+      "base_congestion": 1.68,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.818738
+        ],
+        [
+          18.491153,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 14,
+      "to": 8,
+      "length": 299.7,
+      "name": "Kothrud Main Ave",
+      "base_congestion": 1.48,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.818738
+        ],
+        [
+          18.488458,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 9,
+      "to": 10,
+      "length": 299.7,
+      "name": "DP Road",
+      "base_congestion": 1.65,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.821579
+        ],
+        [
+          18.488458,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 10,
+      "to": 9,
+      "length": 299.7,
+      "name": "DP Road",
+      "base_congestion": 1.58,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.824421
+        ],
+        [
+          18.488458,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 9,
+      "to": 15,
+      "length": 299.7,
+      "name": "Hingne Road",
+      "base_congestion": 1.43,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.821579
+        ],
+        [
+          18.491153,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 15,
+      "to": 9,
+      "length": 299.7,
+      "name": "Hingne Road",
+      "base_congestion": 1.78,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.821579
+        ],
+        [
+          18.488458,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 10,
+      "to": 11,
+      "length": 299.6,
+      "name": "DP Road",
+      "base_congestion": 1.3,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.824421
+        ],
+        [
+          18.488458,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 11,
+      "to": 10,
+      "length": 299.6,
+      "name": "DP Road",
+      "base_congestion": 1.44,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.827262
+        ],
+        [
+          18.488458,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 10,
+      "to": 16,
+      "length": 299.7,
+      "name": "Gandhi Bhavan Rd",
+      "base_congestion": 1.66,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.824421
+        ],
+        [
+          18.491153,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 16,
+      "to": 10,
+      "length": 299.7,
+      "name": "Gandhi Bhavan Rd",
+      "base_congestion": 1.49,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.824421
+        ],
+        [
+          18.488458,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 11,
+      "to": 12,
+      "length": 299.7,
+      "name": "DP Road",
+      "base_congestion": 1.69,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.827262
+        ],
+        [
+          18.488458,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 12,
+      "to": 11,
+      "length": 299.7,
+      "name": "DP Road",
+      "base_congestion": 1.46,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.830104
+        ],
+        [
+          18.488458,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 11,
+      "to": 17,
+      "length": 299.7,
+      "name": "Canal Road",
+      "base_congestion": 1.56,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.827262
+        ],
+        [
+          18.491153,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 17,
+      "to": 11,
+      "length": 299.7,
+      "name": "Canal Road",
+      "base_congestion": 1.04,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.827262
+        ],
+        [
+          18.488458,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 12,
+      "to": 18,
+      "length": 299.7,
+      "name": "Shastri Nagar Road",
+      "base_congestion": 1.18,
+      "oneway": false,
+      "geometry": [
+        [
+          18.488458,
+          73.830104
+        ],
+        [
+          18.491153,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 18,
+      "to": 12,
+      "length": 299.7,
+      "name": "Shastri Nagar Road",
+      "base_congestion": 1.23,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.830104
+        ],
+        [
+          18.488458,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 13,
+      "to": 14,
+      "length": 299.7,
+      "name": "Cummins College Road",
+      "base_congestion": 1.06,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.815896
+        ],
+        [
+          18.491153,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 14,
+      "to": 13,
+      "length": 299.7,
+      "name": "Cummins College Road",
+      "base_congestion": 1.19,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.818738
+        ],
+        [
+          18.491153,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 13,
+      "to": 19,
+      "length": 299.6,
+      "name": "Paud Road Link",
+      "base_congestion": 1.08,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.815896
+        ],
+        [
+          18.493847,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 19,
+      "to": 13,
+      "length": 299.6,
+      "name": "Paud Road Link",
+      "base_congestion": 1.22,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.815896
+        ],
+        [
+          18.491153,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 14,
+      "to": 15,
+      "length": 299.6,
+      "name": "Cummins College Road",
+      "base_congestion": 1.51,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.818738
+        ],
+        [
+          18.491153,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 15,
+      "to": 14,
+      "length": 299.6,
+      "name": "Cummins College Road",
+      "base_congestion": 1.29,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.821579
+        ],
+        [
+          18.491153,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 14,
+      "to": 20,
+      "length": 299.6,
+      "name": "Kothrud Main Ave",
+      "base_congestion": 1.3,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.818738
+        ],
+        [
+          18.493847,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 20,
+      "to": 14,
+      "length": 299.6,
+      "name": "Kothrud Main Ave",
+      "base_congestion": 1.17,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.818738
+        ],
+        [
+          18.491153,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 15,
+      "to": 16,
+      "length": 299.7,
+      "name": "Cummins College Road",
+      "base_congestion": 1.21,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.821579
+        ],
+        [
+          18.491153,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 16,
+      "to": 15,
+      "length": 299.7,
+      "name": "Cummins College Road",
+      "base_congestion": 1.75,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.824421
+        ],
+        [
+          18.491153,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 15,
+      "to": 21,
+      "length": 299.6,
+      "name": "Hingne Road",
+      "base_congestion": 1.52,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.821579
+        ],
+        [
+          18.493847,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 21,
+      "to": 15,
+      "length": 299.6,
+      "name": "Hingne Road",
+      "base_congestion": 1.49,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.821579
+        ],
+        [
+          18.491153,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 16,
+      "to": 17,
+      "length": 299.6,
+      "name": "Cummins College Road",
+      "base_congestion": 1.14,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.824421
+        ],
+        [
+          18.491153,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 17,
+      "to": 16,
+      "length": 299.6,
+      "name": "Cummins College Road",
+      "base_congestion": 1.58,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.827262
+        ],
+        [
+          18.491153,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 16,
+      "to": 22,
+      "length": 299.6,
+      "name": "Gandhi Bhavan Rd",
+      "base_congestion": 1.13,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.824421
+        ],
+        [
+          18.493847,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 22,
+      "to": 16,
+      "length": 299.6,
+      "name": "Gandhi Bhavan Rd",
+      "base_congestion": 1.3,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.824421
+        ],
+        [
+          18.491153,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 17,
+      "to": 18,
+      "length": 299.7,
+      "name": "Cummins College Road",
+      "base_congestion": 1.79,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.827262
+        ],
+        [
+          18.491153,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 18,
+      "to": 17,
+      "length": 299.7,
+      "name": "Cummins College Road",
+      "base_congestion": 1.51,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.830104
+        ],
+        [
+          18.491153,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 17,
+      "to": 23,
+      "length": 299.6,
+      "name": "Canal Road",
+      "base_congestion": 1.45,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.827262
+        ],
+        [
+          18.493847,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 23,
+      "to": 17,
+      "length": 299.6,
+      "name": "Canal Road",
+      "base_congestion": 1.55,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.827262
+        ],
+        [
+          18.491153,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 18,
+      "to": 24,
+      "length": 299.6,
+      "name": "Shastri Nagar Road",
+      "base_congestion": 1.67,
+      "oneway": false,
+      "geometry": [
+        [
+          18.491153,
+          73.830104
+        ],
+        [
+          18.493847,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 24,
+      "to": 18,
+      "length": 299.6,
+      "name": "Shastri Nagar Road",
+      "base_congestion": 1.62,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.830104
+        ],
+        [
+          18.491153,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 19,
+      "to": 20,
+      "length": 299.7,
+      "name": "Mayur Colony Road",
+      "base_congestion": 1.18,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.815896
+        ],
+        [
+          18.493847,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 20,
+      "to": 19,
+      "length": 299.7,
+      "name": "Mayur Colony Road",
+      "base_congestion": 1.03,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.818738
+        ],
+        [
+          18.493847,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 19,
+      "to": 25,
+      "length": 299.7,
+      "name": "Paud Road Link",
+      "base_congestion": 1.25,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.815896
+        ],
+        [
+          18.496542,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 25,
+      "to": 19,
+      "length": 299.7,
+      "name": "Paud Road Link",
+      "base_congestion": 1.21,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.815896
+        ],
+        [
+          18.493847,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 20,
+      "to": 21,
+      "length": 299.6,
+      "name": "Mayur Colony Road",
+      "base_congestion": 1.17,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.818738
+        ],
+        [
+          18.493847,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 21,
+      "to": 20,
+      "length": 299.6,
+      "name": "Mayur Colony Road",
+      "base_congestion": 1.75,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.821579
+        ],
+        [
+          18.493847,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 20,
+      "to": 26,
+      "length": 299.7,
+      "name": "Kothrud Main Ave",
+      "base_congestion": 1.7,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.818738
+        ],
+        [
+          18.496542,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 26,
+      "to": 20,
+      "length": 299.7,
+      "name": "Kothrud Main Ave",
+      "base_congestion": 1.25,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.818738
+        ],
+        [
+          18.493847,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 21,
+      "to": 22,
+      "length": 299.7,
+      "name": "Mayur Colony Road",
+      "base_congestion": 1.52,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.821579
+        ],
+        [
+          18.493847,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 22,
+      "to": 21,
+      "length": 299.7,
+      "name": "Mayur Colony Road",
+      "base_congestion": 1.32,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.824421
+        ],
+        [
+          18.493847,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 21,
+      "to": 27,
+      "length": 299.7,
+      "name": "Hingne Road",
+      "base_congestion": 1.73,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.821579
+        ],
+        [
+          18.496542,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 27,
+      "to": 21,
+      "length": 299.7,
+      "name": "Hingne Road",
+      "base_congestion": 1.37,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.821579
+        ],
+        [
+          18.493847,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 22,
+      "to": 23,
+      "length": 299.6,
+      "name": "Mayur Colony Road",
+      "base_congestion": 1.21,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.824421
+        ],
+        [
+          18.493847,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 23,
+      "to": 22,
+      "length": 299.6,
+      "name": "Mayur Colony Road",
+      "base_congestion": 1.2,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.827262
+        ],
+        [
+          18.493847,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 22,
+      "to": 28,
+      "length": 299.7,
+      "name": "Gandhi Bhavan Rd",
+      "base_congestion": 1.45,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.824421
+        ],
+        [
+          18.496542,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 28,
+      "to": 22,
+      "length": 299.7,
+      "name": "Gandhi Bhavan Rd",
+      "base_congestion": 1.21,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.824421
+        ],
+        [
+          18.493847,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 23,
+      "to": 24,
+      "length": 299.7,
+      "name": "Mayur Colony Road",
+      "base_congestion": 1.47,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.827262
+        ],
+        [
+          18.493847,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 24,
+      "to": 23,
+      "length": 299.7,
+      "name": "Mayur Colony Road",
+      "base_congestion": 1.72,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.830104
+        ],
+        [
+          18.493847,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 23,
+      "to": 29,
+      "length": 299.7,
+      "name": "Canal Road",
+      "base_congestion": 1.32,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.827262
+        ],
+        [
+          18.496542,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 29,
+      "to": 23,
+      "length": 299.7,
+      "name": "Canal Road",
+      "base_congestion": 1.18,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.827262
+        ],
+        [
+          18.493847,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 24,
+      "to": 30,
+      "length": 299.7,
+      "name": "Shastri Nagar Road",
+      "base_congestion": 1.8,
+      "oneway": false,
+      "geometry": [
+        [
+          18.493847,
+          73.830104
+        ],
+        [
+          18.496542,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 30,
+      "to": 24,
+      "length": 299.7,
+      "name": "Shastri Nagar Road",
+      "base_congestion": 1.41,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.830104
+        ],
+        [
+          18.493847,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 25,
+      "to": 26,
+      "length": 299.7,
+      "name": "Dahanukar Colony Rd",
+      "base_congestion": 1.07,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.815896
+        ],
+        [
+          18.496542,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 26,
+      "to": 25,
+      "length": 299.7,
+      "name": "Dahanukar Colony Rd",
+      "base_congestion": 1.04,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.818738
+        ],
+        [
+          18.496542,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 25,
+      "to": 31,
+      "length": 299.7,
+      "name": "Paud Road Link",
+      "base_congestion": 1.09,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.815896
+        ],
+        [
+          18.499237,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 31,
+      "to": 25,
+      "length": 299.7,
+      "name": "Paud Road Link",
+      "base_congestion": 1.5,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.815896
+        ],
+        [
+          18.496542,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 26,
+      "to": 27,
+      "length": 299.6,
+      "name": "Dahanukar Colony Rd",
+      "base_congestion": 1.63,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.818738
+        ],
+        [
+          18.496542,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 27,
+      "to": 26,
+      "length": 299.6,
+      "name": "Dahanukar Colony Rd",
+      "base_congestion": 1.34,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.821579
+        ],
+        [
+          18.496542,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 26,
+      "to": 32,
+      "length": 299.7,
+      "name": "Kothrud Main Ave",
+      "base_congestion": 1.05,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.818738
+        ],
+        [
+          18.499237,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 32,
+      "to": 26,
+      "length": 299.7,
+      "name": "Kothrud Main Ave",
+      "base_congestion": 1.31,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.818738
+        ],
+        [
+          18.496542,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 27,
+      "to": 28,
+      "length": 299.7,
+      "name": "Dahanukar Colony Rd",
+      "base_congestion": 1.8,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.821579
+        ],
+        [
+          18.496542,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 28,
+      "to": 27,
+      "length": 299.7,
+      "name": "Dahanukar Colony Rd",
+      "base_congestion": 1.42,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.824421
+        ],
+        [
+          18.496542,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 27,
+      "to": 33,
+      "length": 299.7,
+      "name": "Hingne Road",
+      "base_congestion": 1.78,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.821579
+        ],
+        [
+          18.499237,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 33,
+      "to": 27,
+      "length": 299.7,
+      "name": "Hingne Road",
+      "base_congestion": 1.69,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.821579
+        ],
+        [
+          18.496542,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 28,
+      "to": 29,
+      "length": 299.6,
+      "name": "Dahanukar Colony Rd",
+      "base_congestion": 1.01,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.824421
+        ],
+        [
+          18.496542,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 29,
+      "to": 28,
+      "length": 299.6,
+      "name": "Dahanukar Colony Rd",
+      "base_congestion": 1.58,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.827262
+        ],
+        [
+          18.496542,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 28,
+      "to": 34,
+      "length": 299.7,
+      "name": "Gandhi Bhavan Rd",
+      "base_congestion": 1.55,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.824421
+        ],
+        [
+          18.499237,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 34,
+      "to": 28,
+      "length": 299.7,
+      "name": "Gandhi Bhavan Rd",
+      "base_congestion": 1.43,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.824421
+        ],
+        [
+          18.496542,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 29,
+      "to": 30,
+      "length": 299.7,
+      "name": "Dahanukar Colony Rd",
+      "base_congestion": 1.21,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.827262
+        ],
+        [
+          18.496542,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 30,
+      "to": 29,
+      "length": 299.7,
+      "name": "Dahanukar Colony Rd",
+      "base_congestion": 1.51,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.830104
+        ],
+        [
+          18.496542,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 29,
+      "to": 35,
+      "length": 299.7,
+      "name": "Canal Road",
+      "base_congestion": 1.09,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.827262
+        ],
+        [
+          18.499237,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 35,
+      "to": 29,
+      "length": 299.7,
+      "name": "Canal Road",
+      "base_congestion": 1.35,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.827262
+        ],
+        [
+          18.496542,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 30,
+      "to": 36,
+      "length": 299.7,
+      "name": "Shastri Nagar Road",
+      "base_congestion": 1.36,
+      "oneway": false,
+      "geometry": [
+        [
+          18.496542,
+          73.830104
+        ],
+        [
+          18.499237,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 36,
+      "to": 30,
+      "length": 299.7,
+      "name": "Shastri Nagar Road",
+      "base_congestion": 1.76,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.830104
+        ],
+        [
+          18.496542,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 31,
+      "to": 32,
+      "length": 299.7,
+      "name": "Warje Bypass Road",
+      "base_congestion": 1.7,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.815896
+        ],
+        [
+          18.499237,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 32,
+      "to": 31,
+      "length": 299.7,
+      "name": "Warje Bypass Road",
+      "base_congestion": 1.21,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.818738
+        ],
+        [
+          18.499237,
+          73.815896
+        ]
+      ]
+    },
+    {
+      "from": 32,
+      "to": 33,
+      "length": 299.6,
+      "name": "Warje Bypass Road",
+      "base_congestion": 1.4,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.818738
+        ],
+        [
+          18.499237,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 33,
+      "to": 32,
+      "length": 299.6,
+      "name": "Warje Bypass Road",
+      "base_congestion": 1.14,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.821579
+        ],
+        [
+          18.499237,
+          73.818738
+        ]
+      ]
+    },
+    {
+      "from": 33,
+      "to": 34,
+      "length": 299.7,
+      "name": "Warje Bypass Road",
+      "base_congestion": 1.73,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.821579
+        ],
+        [
+          18.499237,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 34,
+      "to": 33,
+      "length": 299.7,
+      "name": "Warje Bypass Road",
+      "base_congestion": 1.7,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.824421
+        ],
+        [
+          18.499237,
+          73.821579
+        ]
+      ]
+    },
+    {
+      "from": 34,
+      "to": 35,
+      "length": 299.6,
+      "name": "Warje Bypass Road",
+      "base_congestion": 1.24,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.824421
+        ],
+        [
+          18.499237,
+          73.827262
+        ]
+      ]
+    },
+    {
+      "from": 35,
+      "to": 34,
+      "length": 299.6,
+      "name": "Warje Bypass Road",
+      "base_congestion": 1.51,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.827262
+        ],
+        [
+          18.499237,
+          73.824421
+        ]
+      ]
+    },
+    {
+      "from": 35,
+      "to": 36,
+      "length": 299.7,
+      "name": "Warje Bypass Road",
+      "base_congestion": 1.49,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.827262
+        ],
+        [
+          18.499237,
+          73.830104
+        ]
+      ]
+    },
+    {
+      "from": 36,
+      "to": 35,
+      "length": 299.7,
+      "name": "Warje Bypass Road",
+      "base_congestion": 1.12,
+      "oneway": false,
+      "geometry": [
+        [
+          18.499237,
+          73.830104
+        ],
+        [
+          18.499237,
+          73.827262
+        ]
+      ]
+    }
+  ]
+}
