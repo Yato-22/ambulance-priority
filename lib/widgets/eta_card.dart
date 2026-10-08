@@ -27,10 +27,16 @@ class EtaCard extends StatelessWidget {
           orElse: () => null,
         );
 
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+
     return Card(
       elevation: 6,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: isLight ? BorderSide(color: theme.colorScheme.outlineVariant) : BorderSide.none,
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
@@ -41,10 +47,14 @@ class EtaCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.red.shade100,
+                    color: isLight ? const Color(0xFFFEE2E2) : const Color(0x33EF4444),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.emergency_rounded, color: Colors.red, size: 28),
+                  child: Icon(
+                    Icons.emergency_rounded,
+                    color: isLight ? const Color(0xFFDC2626) : const Color(0xFFF87171),
+                    size: 28,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -58,8 +68,10 @@ class EtaCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        'Speed: ${state.ambulance.speedKmh.toStringAsFixed(0)} km/h • Time: ${state.elapsedTimeSeconds.toStringAsFixed(0)}s',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                        state.status == SimulationStatus.heldAtSignal
+                            ? 'Waiting: ${state.signalWaitTimeSeconds.toStringAsFixed(0)}s • Time: ${state.elapsedTimeSeconds.toStringAsFixed(0)}s'
+                            : 'Speed: ${state.ambulance.speedKmh.toStringAsFixed(0)} km/h • Time: ${state.elapsedTimeSeconds.toStringAsFixed(0)}s',
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                       ),
                     ],
                   ),
@@ -69,15 +81,15 @@ class EtaCard extends StatelessWidget {
                   children: [
                     Text(
                       etaText,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 20,
-                        color: Colors.indigo,
+                        color: theme.colorScheme.primary,
                       ),
                     ),
                     Text(
                       distText,
-                      style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                     ),
                   ],
                 ),
@@ -90,20 +102,36 @@ class EtaCard extends StatelessWidget {
                   child: Row(
                     children: [
                       Icon(
-                        activeSignal?.state == SignalState.greenPriority
-                            ? Icons.check_circle_rounded
-                            : Icons.traffic_rounded,
-                        color: activeSignal?.state == SignalState.greenPriority
-                            ? Colors.green
-                            : Colors.orange,
+                        state.status == SimulationStatus.heldAtSignal
+                            ? Icons.pause_circle_rounded
+                            : (activeSignal?.state == SignalState.greenPriority
+                                ? Icons.check_circle_rounded
+                                : Icons.traffic_rounded),
+                        color: state.status == SimulationStatus.heldAtSignal
+                            ? Colors.redAccent
+                            : (activeSignal?.state == SignalState.greenPriority
+                                ? Colors.green
+                                : Colors.orange),
                         size: 18,
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        activeSignal != null
-                            ? 'Next: ${activeSignal.id} (${activeSignal.distanceToAmbulance?.toStringAsFixed(0) ?? "?"}m)'
-                            : 'No signals ahead',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      Expanded(
+                        child: Text(
+                          state.status == SimulationStatus.heldAtSignal
+                              ? 'HELD AT ${state.heldSignalId ?? activeSignal?.id ?? "SIGNAL"}'
+                              : (activeSignal != null
+                                  ? 'Next: ${activeSignal.id} (${activeSignal.distanceToAmbulance?.toStringAsFixed(0) ?? "?"}m)'
+                                  : 'No signals ahead'),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: state.status == SimulationStatus.heldAtSignal
+                                ? Colors.redAccent.shade700
+                                : null,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -111,19 +139,23 @@ class EtaCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: activeSignal?.state == SignalState.greenPriority
-                        ? Colors.green.shade600
-                        : (activeSignal?.state == SignalState.pendingGreen
-                            ? Colors.amber.shade700
-                            : Colors.grey.shade700),
+                    color: state.status == SimulationStatus.heldAtSignal
+                        ? Colors.red.shade700
+                        : (activeSignal?.state == SignalState.greenPriority
+                            ? Colors.green.shade600
+                            : (activeSignal?.state == SignalState.pendingGreen
+                                ? Colors.amber.shade700
+                                : Colors.grey.shade700)),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    activeSignal?.state == SignalState.greenPriority
-                        ? 'PRIORITY GREEN'
-                        : (activeSignal?.state == SignalState.pendingGreen
-                            ? 'LORA REQ...'
-                            : 'CLEARED: ${state.signalsClearedCount}'),
+                    state.status == SimulationStatus.heldAtSignal
+                        ? 'HELD AT ${state.heldSignalId ?? activeSignal?.id ?? "SIGNAL"}'
+                        : (activeSignal?.state == SignalState.greenPriority
+                            ? 'PRIORITY GREEN'
+                            : (activeSignal?.state == SignalState.pendingGreen
+                                ? 'LORA REQ...'
+                                : 'CLEARED: ${state.signalsClearedCount}')),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,

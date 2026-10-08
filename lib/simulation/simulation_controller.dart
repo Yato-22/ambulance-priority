@@ -1,5 +1,8 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'dart:math' as math;
+import 'package:collection/collection.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import '../algorithms/astar.dart';
 import '../algorithms/haversine.dart';
 import '../config/constants.dart';
@@ -34,7 +37,8 @@ class SimulationController extends ChangeNotifier {
   double _greenTriggerRadiusM = AppConstants.greenTriggerRadiusM;
   double _ambulanceSpeedKmh = AppConstants.defaultSpeedKmh;
   double _timeScale = 1.0;
-  bool _showDijkstraComparison = false;
+  bool _showDijkstraComparison = true;
+  bool _rerouteAroundForcedRed = false;
 
   SimulationController() {
     _loraLink = LoRaLinkSimulator(packetLossProbability: 0.0);
@@ -59,6 +63,17 @@ class SimulationController extends ChangeNotifier {
   double get ambulanceSpeedKmh => _ambulanceSpeedKmh;
   double get timeScale => _timeScale;
   bool get showDijkstraComparison => _showDijkstraComparison;
+  bool get rerouteAroundForcedRed => _rerouteAroundForcedRed;
+
+  void setRerouteAroundForcedRed(bool value) {
+    _rerouteAroundForcedRed = value;
+    notifyListeners();
+    if (value &&
+        (_state.status == SimulationStatus.enRoute ||
+            _state.status == SimulationStatus.heldAtSignal)) {
+      _checkRerouteForcedRed();
+    }
+  }
 
   /// Helper: finds the node farthest (by straight-line Haversine) from a given node.
   int findFarthestNode(int goalNodeId) {
@@ -188,9 +203,10 @@ class SimulationController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Resumes an en-route trip.
+  /// Resumes an en-route or held trip.
   void resumeTrip() {
-    if (_state.status == SimulationStatus.enRoute) {
+    if (_state.status == SimulationStatus.enRoute ||
+        _state.status == SimulationStatus.heldAtSignal) {
       _state = _state.copyWith(isPaused: false);
       _startTimer();
       notifyListeners();
@@ -284,7 +300,61 @@ class SimulationController extends ChangeNotifier {
   void setSignalOverride(String signalId, SignalOverride overrideState) {
     _signalManager.setOverride(signalId, overrideState);
     _state = _state.copyWith(signals: _signalManager.signals);
+
+    if (overrideState == SignalOverride.forceRed) {
+      if (_rerouteAroundForcedRed) {
+        _checkRerouteForcedRed();
+      }
+    } else if (_state.status == SimulationStatus.heldAtSignal &&
+        _state.heldSignalId == signalId) {
+      final waitSec = _state.signalWaitTimeSeconds;
+      _recordTimelineEvent(
+        'Released at Signal',
+        'Released at $signalId after ${waitSec.toStringAsFixed(0)} s',
+        'signal',
+      );
+      _state = _state.copyWith(
+        status: SimulationStatus.enRoute,
+        clearHeldSignal: true,
+        signalWaitTimeSeconds: 0.0,
+      );
+      if (overrideState == SignalOverride.none) {
+        _signalManager.update(
+          ambulance: _state.ambulance,
+          routeNodeIds: _trajectory.routeNodeIds,
+          dtSeconds: 0.0,
+          nodeCumulativeDistances: _trajectory.nodeCumulativeDistances,
+          distanceTravelledM: _state.ambulance.distanceTravelledM,
+        );
+        _state = _state.copyWith(
+          signals: _signalManager.signals,
+          activeSignalId: _signalManager.activeSignalId,
+        );
+      }
+    }
+
     notifyListeners();
+  }
+
+  void _checkRerouteForcedRed() {
+    if ((_state.status != SimulationStatus.enRoute &&
+            _state.status != SimulationStatus.heldAtSignal) ||
+        _graph == null) {
+      return;
+    }
+    final hospital = _state.targetHospital;
+    if (hospital == null) return;
+
+    final forcedRedNodeIds = _signalManager.signals
+        .where((s) => s.overrideState == SignalOverride.forceRed)
+        .map((s) => s.nodeId)
+        .toSet();
+
+    if (forcedRedNodeIds.isEmpty) return;
+    final hasForcedRedOnRoute = _trajectory.routeNodeIds.any(forcedRedNodeIds.contains);
+    if (!hasForcedRedOnRoute) return;
+
+    _rerouteMidTrip();
   }
 
   /// Blocks a road segment and dynamically triggers A* rerouting if on route.
@@ -386,6 +456,7 @@ class SimulationController extends ChangeNotifier {
   /// Checks if current trip needs dynamic A* rerouting, or recovers from NO_ROUTE.
   void _handleGraphChange() {
     if ((_state.status != SimulationStatus.enRoute &&
+            _state.status != SimulationStatus.heldAtSignal &&
             _state.status != SimulationStatus.noRoute) ||
         _graph == null) {
       notifyListeners();
@@ -405,6 +476,13 @@ class SimulationController extends ChangeNotifier {
 
     final amb = _state.ambulance;
     final goalId = hospital.nodeId;
+
+    final forcedRedNodeIds = _rerouteAroundForcedRed
+        ? _signalManager.signals
+            .where((s) => s.overrideState == SignalOverride.forceRed)
+            .map((s) => s.nodeId)
+            .toSet()
+        : const <int>{};
 
     int? nodeA = amb.currentEdgeFrom;
     int? nodeB = amb.currentEdgeTo;
@@ -431,16 +509,56 @@ class SimulationController extends ChangeNotifier {
 
     if (nodeA == nodeB) {
       // Ambulance is at a junction
-      final res = AStarRouter.findRoute(
+      var res = AStarRouter.findRoute(
         graph: _graph!,
         startNodeId: nodeA,
         goalNodeId: goalId,
+        avoidNodeIds: forcedRedNodeIds,
       );
       if (res == null ||
           res.nodeIds.length < 2 ||
           !AStarRouter.assertRouteIsValid(_graph!, res.nodeIds)) {
-        _enterNoRoute();
-        return;
+        if (forcedRedNodeIds.isNotEmpty) {
+          // Fallback: see if normal route exists without avoiding forced red
+          final fallbackRes = AStarRouter.findRoute(
+            graph: _graph!,
+            startNodeId: nodeA,
+            goalNodeId: goalId,
+          );
+          if (fallbackRes != null &&
+              fallbackRes.nodeIds.length >= 2 &&
+              AStarRouter.assertRouteIsValid(_graph!, fallbackRes.nodeIds)) {
+            // Keep current route or use fallback, hold at stop line instead of entering NO_ROUTE
+            if (_trajectory.routeNodeIds.isNotEmpty &&
+                AStarRouter.assertRouteIsValid(_graph!, _trajectory.routeNodeIds)) {
+              return;
+            }
+            res = fallbackRes;
+          } else {
+            _enterNoRoute();
+            return;
+          }
+        } else {
+          _enterNoRoute();
+          return;
+        }
+      }
+
+      RouteResult? dijkstraRes;
+      if (_showDijkstraComparison) {
+        dijkstraRes = AStarRouter.findRouteDijkstra(
+          graph: _graph!,
+          startNodeId: nodeA,
+          goalNodeId: goalId,
+          avoidNodeIds: forcedRedNodeIds,
+        );
+        if (dijkstraRes == null && forcedRedNodeIds.isNotEmpty) {
+          dijkstraRes = AStarRouter.findRouteDijkstra(
+            graph: _graph!,
+            startNodeId: nodeA,
+            goalNodeId: goalId,
+          );
+        }
       }
 
       final newTrajectory = AmbulanceMover.buildTrajectory(
@@ -461,7 +579,9 @@ class SimulationController extends ChangeNotifier {
         currentEdgeTo: res.nodeIds[1],
       );
 
-      final wasPausedOrNoRoute = _state.status == SimulationStatus.noRoute || _state.isPaused;
+      final wasPausedOrNoRoute = _state.status == SimulationStatus.noRoute ||
+          _state.status == SimulationStatus.heldAtSignal ||
+          _state.isPaused;
 
       _state = _state.copyWith(
         status: SimulationStatus.enRoute,
@@ -475,7 +595,12 @@ class SimulationController extends ChangeNotifier {
         oldEtaSeconds: oldEta > 0 ? oldEta : null,
         rerouteCount: _state.rerouteCount + 1,
         nodesExpandedAStar: res.nodesExpanded,
+        nodesExpandedDijkstra: dijkstraRes?.nodesExpanded,
+        astarCost: res.totalCost,
+        dijkstraCost: dijkstraRes?.totalCost,
         isPaused: false,
+        clearHeldSignal: true,
+        signalWaitTimeSeconds: 0.0,
       );
 
       if (wasPausedOrNoRoute) {
@@ -518,6 +643,7 @@ class SimulationController extends ChangeNotifier {
         graph: _graph!,
         startNodeId: nodeA,
         goalNodeId: goalId,
+        avoidNodeIds: forcedRedNodeIds,
       );
       if (res != null) {
         totalCostA = costToA + res.totalCost;
@@ -541,6 +667,7 @@ class SimulationController extends ChangeNotifier {
         graph: _graph!,
         startNodeId: nodeB,
         goalNodeId: goalId,
+        avoidNodeIds: forcedRedNodeIds,
       );
       if (res != null) {
         totalCostB = costToB + res.totalCost;
@@ -549,8 +676,58 @@ class SimulationController extends ChangeNotifier {
     }
 
     if (resultA == null && resultB == null) {
-      _enterNoRoute();
-      return;
+      if (forcedRedNodeIds.isNotEmpty) {
+        // Fallback: check if path exists without avoiding forced-red
+        RouteResult? fbA;
+        double? fbCostA;
+        if (nodeA == goalId) {
+          fbCostA = costToA;
+          fbA = RouteResult(nodeIds: [nodeA], totalDistanceMeters: distA, totalCost: costToA, nodesExpanded: 0);
+        } else {
+          final res = AStarRouter.findRoute(graph: _graph!, startNodeId: nodeA, goalNodeId: goalId);
+          if (res != null) {
+            fbCostA = costToA + res.totalCost;
+            fbA = res;
+          }
+        }
+
+        RouteResult? fbB;
+        double? fbCostB;
+        if (nodeB == goalId) {
+          fbCostB = costToB;
+          fbB = RouteResult(nodeIds: [nodeB], totalDistanceMeters: distB, totalCost: costToB, nodesExpanded: 0);
+        } else {
+          final res = AStarRouter.findRoute(graph: _graph!, startNodeId: nodeB, goalNodeId: goalId);
+          if (res != null) {
+            fbCostB = costToB + res.totalCost;
+            fbB = res;
+          }
+        }
+
+        if (fbA != null || fbB != null) {
+          // Alternative path around forced red not found, but normal path exists.
+          // Maintain current route and hold at stop line instead of entering NO_ROUTE.
+          if (_trajectory.routeNodeIds.isNotEmpty &&
+              AStarRouter.assertRouteIsValid(
+                _graph!,
+                _trajectory.routeNodeIds,
+                currentEdgeFrom: amb.currentEdgeFrom,
+                currentEdgeTo: amb.currentEdgeTo,
+              )) {
+            return;
+          }
+          resultA = fbA;
+          totalCostA = fbCostA;
+          resultB = fbB;
+          totalCostB = fbCostB;
+        } else {
+          _enterNoRoute();
+          return;
+        }
+      } else {
+        _enterNoRoute();
+        return;
+      }
     }
 
     final bool chooseA;
@@ -604,6 +781,23 @@ class SimulationController extends ChangeNotifier {
 
     _trajectory = newTrajectory;
 
+    RouteResult? dijkstraRes;
+    if (_showDijkstraComparison) {
+      dijkstraRes = AStarRouter.findRouteDijkstra(
+        graph: _graph!,
+        startNodeId: exitTo,
+        goalNodeId: goalId,
+        avoidNodeIds: forcedRedNodeIds,
+      );
+      if (dijkstraRes == null && forcedRedNodeIds.isNotEmpty) {
+        dijkstraRes = AStarRouter.findRouteDijkstra(
+          graph: _graph!,
+          startNodeId: exitTo,
+          goalNodeId: goalId,
+        );
+      }
+    }
+
     final baseSpeedMps = _ambulanceSpeedKmh / 3.6;
     final etaSec = baseSpeedMps > 0 ? (newTrajectory.totalDistanceMeters / baseSpeedMps) : 0.0;
     final oldEta = _state.etaSeconds;
@@ -625,7 +819,9 @@ class SimulationController extends ChangeNotifier {
       currentEdgeTo: exitTo,
     );
 
-    final wasPausedOrNoRoute = _state.status == SimulationStatus.noRoute || _state.isPaused;
+    final wasPausedOrNoRoute = _state.status == SimulationStatus.noRoute ||
+        _state.status == SimulationStatus.heldAtSignal ||
+        _state.isPaused;
 
     _state = _state.copyWith(
       status: SimulationStatus.enRoute,
@@ -639,7 +835,12 @@ class SimulationController extends ChangeNotifier {
       oldEtaSeconds: oldEta > 0 ? oldEta : null,
       rerouteCount: _state.rerouteCount + 1,
       nodesExpandedAStar: chosenResult.nodesExpanded,
+      nodesExpandedDijkstra: dijkstraRes?.nodesExpanded,
+      astarCost: chosenResult.totalCost,
+      dijkstraCost: dijkstraRes?.totalCost,
       isPaused: false,
+      clearHeldSignal: true,
+      signalWaitTimeSeconds: 0.0,
     );
 
     if (wasPausedOrNoRoute) {
@@ -663,11 +864,27 @@ class SimulationController extends ChangeNotifier {
   }) {
     if (_graph == null) return;
 
-    final astarResult = AStarRouter.findRoute(
+    final forcedRedNodeIds = _rerouteAroundForcedRed
+        ? _signalManager.signals
+            .where((s) => s.overrideState == SignalOverride.forceRed)
+            .map((s) => s.nodeId)
+            .toSet()
+        : const <int>{};
+
+    var astarResult = AStarRouter.findRoute(
       graph: _graph!,
       startNodeId: fromNodeId,
       goalNodeId: toNodeId,
+      avoidNodeIds: forcedRedNodeIds,
     );
+
+    if (astarResult == null && forcedRedNodeIds.isNotEmpty) {
+      astarResult = AStarRouter.findRoute(
+        graph: _graph!,
+        startNodeId: fromNodeId,
+        goalNodeId: toNodeId,
+      );
+    }
 
     RouteResult? dijkstraResult;
     if (_showDijkstraComparison) {
@@ -675,6 +892,7 @@ class SimulationController extends ChangeNotifier {
         graph: _graph!,
         startNodeId: fromNodeId,
         goalNodeId: toNodeId,
+        avoidNodeIds: forcedRedNodeIds,
       );
     }
 
@@ -699,7 +917,7 @@ class SimulationController extends ChangeNotifier {
 
     // Debug logging as required by section 4(g)
     final routeSignals = _signalManager.signals
-        .where((s) => astarResult.nodeIds.contains(s.nodeId))
+        .where((s) => astarResult!.nodeIds.contains(s.nodeId))
         .map((s) => '${s.id} (node ${s.nodeId})')
         .toList();
 
@@ -743,6 +961,8 @@ class SimulationController extends ChangeNotifier {
         signalsClearedCount: 0,
         nodesExpandedAStar: astarResult.nodesExpanded,
         nodesExpandedDijkstra: dijkstraResult?.nodesExpanded,
+        astarCost: astarResult.totalCost,
+        dijkstraCost: dijkstraResult?.totalCost,
         isPaused: false,
       );
 
@@ -775,6 +995,8 @@ class SimulationController extends ChangeNotifier {
         rerouteCount: _state.rerouteCount + 1,
         nodesExpandedAStar: astarResult.nodesExpanded,
         nodesExpandedDijkstra: dijkstraResult?.nodesExpanded,
+        astarCost: astarResult.totalCost,
+        dijkstraCost: dijkstraResult?.totalCost,
       );
 
       _recordTimelineEvent(
@@ -798,12 +1020,86 @@ class SimulationController extends ChangeNotifier {
   /// Executes a single discrete simulation tick (500ms dt * timeScale).
   /// Synchronous core logic allows both runtime UI timer and headless testing loops.
   void tick() {
-    if (_state.status != SimulationStatus.enRoute || _state.isPaused) return;
+    if ((_state.status != SimulationStatus.enRoute &&
+            _state.status != SimulationStatus.heldAtSignal) ||
+        _state.isPaused) {
+      return;
+    }
 
     final dtSeconds = (AppConstants.tickMs / 1000.0);
+    final scaledDt = dtSeconds * _timeScale;
     final baseSpeedMps = _ambulanceSpeedKmh / 3.6;
+    final newElapsedTime = _state.elapsedTimeSeconds + scaledDt;
 
-    // 1. Advance ambulance position along route polyline
+    // Handle HELD_AT_SIGNAL state
+    if (_state.status == SimulationStatus.heldAtSignal) {
+      final newWaitTime = _state.signalWaitTimeSeconds + scaledDt;
+
+      // Update signal cycles
+      _signalManager.update(
+        ambulance: _state.ambulance,
+        routeNodeIds: _trajectory.routeNodeIds,
+        dtSeconds: scaledDt,
+        nodeCumulativeDistances: _trajectory.nodeCumulativeDistances,
+        distanceTravelledM: _state.ambulance.distanceTravelledM,
+      );
+
+      final heldSig = _signalManager.signals.firstWhereOrNull((s) => s.id == _state.heldSignalId);
+      final isStillRed = heldSig != null &&
+          (heldSig.overrideState == SignalOverride.forceRed ||
+              (heldSig.overrideState != SignalOverride.forceGreen &&
+                  heldSig.state == SignalState.red));
+
+      if (isStillRed) {
+        // Continue holding stationary at stop line
+        _state = _state.copyWith(
+          signals: _signalManager.signals,
+          activeSignalId: _signalManager.activeSignalId ?? _state.heldSignalId,
+          elapsedTimeSeconds: newElapsedTime,
+          signalWaitTimeSeconds: newWaitTime,
+          loraLogs: _loraLink.logs,
+        );
+        notifyListeners();
+        return;
+      }
+
+      // Signal released! Resume travel
+      _recordTimelineEvent(
+        'Released at Signal',
+        'Released at ${_state.heldSignalId ?? "signal"} after ${newWaitTime.toStringAsFixed(0)} s',
+        'signal',
+      );
+      _state = _state.copyWith(
+        status: SimulationStatus.enRoute,
+        clearHeldSignal: true,
+        signalWaitTimeSeconds: 0.0,
+      );
+    }
+
+    // Identify next signal ahead on route to evaluate stop line
+    TrafficSignal? redSignalAhead;
+    double? stopLineDistM;
+
+    for (final nodeId in _trajectory.routeNodeIds) {
+      final sigDist = _trajectory.nodeCumulativeDistances[nodeId];
+      if (sigDist == null) continue;
+      // Is it ahead of ambulance?
+      if (sigDist > _state.ambulance.distanceTravelledM - 1.0) {
+        final sig = _signalManager.signals.firstWhereOrNull((s) => s.nodeId == nodeId);
+        if (sig != null && !_signalManager.clearedSignalIds.contains(sig.id)) {
+          final isRed = sig.overrideState == SignalOverride.forceRed ||
+              (sig.overrideState != SignalOverride.forceGreen &&
+                  sig.state == SignalState.red);
+          if (isRed) {
+            redSignalAhead = sig;
+            stopLineDistM = math.max(0.0, sigDist - AppConstants.stopLineDistanceM);
+          }
+          break; // only consider the immediate next signal ahead
+        }
+      }
+    }
+
+    // 1. Advance ambulance position along route polyline (with stop line constraint if red)
     final updatedAmbulance = AmbulanceMover.advance(
       current: _state.ambulance,
       trajectory: _trajectory,
@@ -811,25 +1107,61 @@ class SimulationController extends ChangeNotifier {
       dtSeconds: dtSeconds,
       timeScale: _timeScale,
       graph: _graph,
+      stopLineDistanceM: stopLineDistM,
     );
 
     final remainingDist = updatedAmbulance.remainingDistanceM;
     final effectiveSpeed = updatedAmbulance.speedMps;
-    final etaSec = effectiveSpeed > 0 ? (remainingDist / effectiveSpeed) : 0.0;
-    final newElapsedTime = _state.elapsedTimeSeconds + (dtSeconds * _timeScale);
+    final etaSec = effectiveSpeed > 0
+        ? (remainingDist / effectiveSpeed)
+        : (baseSpeedMps > 0 ? (remainingDist / baseSpeedMps) : 0.0);
 
     // 2. Update SignalManager with arc-length tracking and hysteresis
     _signalManager.update(
       ambulance: updatedAmbulance,
       routeNodeIds: _trajectory.routeNodeIds,
-      dtSeconds: dtSeconds * _timeScale,
+      dtSeconds: scaledDt,
       nodeCumulativeDistances: _trajectory.nodeCumulativeDistances,
       distanceTravelledM: updatedAmbulance.distanceTravelledM,
     );
 
+    // Check if ambulance stopped at red signal stop line
+    if (redSignalAhead != null && stopLineDistM != null) {
+      final distToStop = stopLineDistM - updatedAmbulance.distanceTravelledM;
+      if (distToStop <= 0.05 && updatedAmbulance.speedMps <= 0.01) {
+        try {
+          WidgetsBinding.instance;
+          HapticFeedback.mediumImpact().catchError((_) {});
+        } catch (_) {}
+
+        final isForced = redSignalAhead.overrideState == SignalOverride.forceRed;
+        _recordTimelineEvent(
+          'Held at Signal',
+          isForced
+              ? 'Held at ${redSignalAhead.id} (forced red)'
+              : 'Held at ${redSignalAhead.id} (red signal)',
+          'signal',
+        );
+
+        _state = _state.copyWith(
+          status: SimulationStatus.heldAtSignal,
+          heldSignalId: redSignalAhead.id,
+          signalWaitTimeSeconds: 0.0,
+          ambulance: updatedAmbulance,
+          signals: _signalManager.signals,
+          activeSignalId: redSignalAhead.id,
+          remainingDistanceM: remainingDist,
+          etaSeconds: etaSec,
+          elapsedTimeSeconds: newElapsedTime,
+          signalsClearedCount: _signalManager.clearedCount,
+          loraLogs: _loraLink.logs,
+        );
+        notifyListeners();
+        return;
+      }
+    }
+
     // 3. State Machine Check for ARRIVAL
-    // ARRIVED may ONLY be set when: status is EN_ROUTE, distanceTravelled > 0,
-    // and remaining distance < ARRIVAL_RADIUS_M.
     if (updatedAmbulance.distanceTravelledM > 0 &&
         _trajectory.totalDistanceMeters >= 500.0 &&
         (remainingDist <= AppConstants.arrivalRadiusM ||

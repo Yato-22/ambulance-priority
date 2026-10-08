@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/constants.dart';
 import '../simulation/simulation_controller.dart';
+import '../theme/theme_controller.dart';
 
 /// Settings & Tunable Parameters Screen.
 class SettingsScreen extends StatelessWidget {
@@ -10,6 +11,7 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<SimulationController>();
+    final themeController = context.watch<ThemeController>();
 
     return Scaffold(
       appBar: AppBar(
@@ -18,6 +20,92 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Section 0: App Appearance & Theme
+          const Text(
+            'App Appearance',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const SizedBox(height: 12),
+
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        themeController.themeMode == ThemeMode.light
+                            ? Icons.light_mode_rounded
+                            : (themeController.themeMode == ThemeMode.dark
+                                ? Icons.dark_mode_rounded
+                                : Icons.brightness_auto_rounded),
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Theme Mode',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            Text(
+                              'Current: ${themeController.themeModeName}',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<ThemeMode>(
+                      segments: const [
+                        ButtonSegment<ThemeMode>(
+                          value: ThemeMode.light,
+                          icon: Icon(Icons.light_mode_rounded, size: 16),
+                          label: Text('Light'),
+                        ),
+                        ButtonSegment<ThemeMode>(
+                          value: ThemeMode.dark,
+                          icon: Icon(Icons.dark_mode_rounded, size: 16),
+                          label: Text('Dark'),
+                        ),
+                        ButtonSegment<ThemeMode>(
+                          value: ThemeMode.system,
+                          icon: Icon(Icons.brightness_auto_rounded, size: 16),
+                          label: Text('System'),
+                        ),
+                      ],
+                      selected: {themeController.themeMode},
+                      onSelectionChanged: (selection) {
+                        themeController.setThemeMode(selection.first);
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Theme set to ${themeController.themeModeName}'),
+                            duration: const Duration(seconds: 1),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
           // Section 1: Preemption & Kinematics
           const Text(
             'Emergency Preemption & Speed',
@@ -123,11 +211,22 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 12),
 
           Card(
-            child: SwitchListTile(
-              title: const Text('Compare A* vs Dijkstra'),
-              subtitle: const Text('Runs Dijkstra in parallel and displays comparative nodes-expanded count'),
-              value: controller.showDijkstraComparison,
-              onChanged: (val) => controller.setShowDijkstraComparison(val),
+            child: Column(
+              children: [
+                SwitchListTile(
+                  title: const Text('Compare A* vs Dijkstra'),
+                  subtitle: const Text('Runs Dijkstra in parallel and displays comparative nodes-expanded count'),
+                  value: controller.showDijkstraComparison,
+                  onChanged: (val) => controller.setShowDijkstraComparison(val),
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
+                  title: const Text('Reroute around forced-red signals'),
+                  subtitle: const Text('Treat forced-red junctions as blocked for A* routing if alternative exists'),
+                  value: controller.rerouteAroundForcedRed,
+                  onChanged: (val) => controller.setRerouteAroundForcedRed(val),
+                ),
+              ],
             ),
           ),
 

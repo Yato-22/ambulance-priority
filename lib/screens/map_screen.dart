@@ -8,6 +8,7 @@ import '../models/hospital.dart';
 import '../models/road_graph.dart';
 import '../models/sim_state.dart';
 import '../simulation/simulation_controller.dart';
+import '../theme/app_theme.dart';
 import '../widgets/eta_card.dart';
 import '../widgets/schematic_graph_painter.dart';
 import '../widgets/status_banner.dart';
@@ -107,12 +108,16 @@ class _MapScreenState extends State<MapScreen> {
     final state = controller.state;
     final graph = controller.graph;
 
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final mapColors = Theme.of(context).extension<MapColors>() ??
+        (isLight ? MapColors.light : MapColors.dark);
+
     if (graph != null && _projection == null) {
       _projection = CanvasProjection.fromGraph(graph, width: canvasW, height: canvasH);
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF161B22),
+      backgroundColor: mapColors.background,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final viewportSize = Size(constraints.maxWidth, constraints.maxHeight);
@@ -172,8 +177,12 @@ class _MapScreenState extends State<MapScreen> {
                           routePolyline: state.routePolyline,
                           startNodeId: state.startNodeId,
                           targetHospital: state.targetHospital,
-                          isEnRoute: state.status == SimulationStatus.enRoute,
+                          isEnRoute: state.status == SimulationStatus.enRoute ||
+                              state.status == SimulationStatus.heldAtSignal,
+                          isHeldAtSignal: state.status == SimulationStatus.heldAtSignal,
+                          heldSignalId: state.heldSignalId,
                           highlightedRoadKey: _highlightedRoadKey,
+                          mapColors: mapColors,
                         ),
                       ),
                     ),
@@ -192,16 +201,24 @@ class _MapScreenState extends State<MapScreen> {
                       if (_interactionMode == MapInteractionMode.congestion)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                          color: Colors.deepOrange.shade900,
-                          child: const Row(
+                          color: isLight ? const Color(0xFFFFE0B2) : Colors.deepOrange.shade900,
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.touch_app_rounded, color: Colors.white, size: 16),
-                              SizedBox(width: 8),
+                              Icon(
+                                Icons.touch_app_rounded,
+                                color: isLight ? const Color(0xFFBF360C) : Colors.white,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   'CONGESTION MODE: Tap any road segment to cycle (Open -> Moderate -> Heavy -> Blocked)',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                                  style: TextStyle(
+                                    color: isLight ? const Color(0xFFBF360C) : Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -211,16 +228,24 @@ class _MapScreenState extends State<MapScreen> {
                       if (_interactionMode == MapInteractionMode.selectStart)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                          color: Colors.teal.shade900,
-                          child: const Row(
+                          color: isLight ? const Color(0xFFCCFBF1) : Colors.teal.shade900,
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.flag_rounded, color: Colors.white, size: 16),
-                              SizedBox(width: 8),
+                              Icon(
+                                Icons.flag_rounded,
+                                color: isLight ? const Color(0xFF115E59) : Colors.white,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   'SELECT START MODE: Tap any junction on the grid to set start location',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                                  style: TextStyle(
+                                    color: isLight ? const Color(0xFF115E59) : Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -247,74 +272,85 @@ class _MapScreenState extends State<MapScreen> {
               Positioned(
                 right: 16,
                 bottom: 140,
-                child: Column(
-                  children: [
-                    // Toggle Congestion Tool
-                    FloatingActionButton.small(
-                      heroTag: 'cong_btn',
-                      tooltip: 'Congestion & Road Block Mode',
-                      backgroundColor: _interactionMode == MapInteractionMode.congestion
-                          ? Colors.deepOrange
-                          : Colors.blueGrey.shade800,
-                      foregroundColor: Colors.white,
-                      onPressed: () {
-                        setState(() {
-                          _interactionMode = _interactionMode == MapInteractionMode.congestion
-                              ? MapInteractionMode.none
-                              : MapInteractionMode.congestion;
-                        });
-                      },
-                      child: const Icon(Icons.traffic_rounded),
-                    ),
-                    const SizedBox(height: 8),
-                    // Toggle Select Start Node
-                    FloatingActionButton.small(
-                      heroTag: 'start_btn',
-                      tooltip: 'Set Start Location',
-                      backgroundColor: _interactionMode == MapInteractionMode.selectStart
-                          ? Colors.tealAccent.shade700
-                          : Colors.blueGrey.shade800,
-                      foregroundColor: Colors.white,
-                      onPressed: () {
-                        setState(() {
-                          _interactionMode = _interactionMode == MapInteractionMode.selectStart
-                              ? MapInteractionMode.none
-                              : MapInteractionMode.selectStart;
-                        });
-                      },
-                      child: const Icon(Icons.flag_rounded),
-                    ),
-                    const SizedBox(height: 8),
-                    // Zoom In Button
-                    FloatingActionButton.small(
-                      heroTag: 'zoom_in',
-                      tooltip: 'Zoom In',
-                      backgroundColor: Colors.blueGrey.shade800,
-                      foregroundColor: Colors.white,
-                      onPressed: () => _zoom(1.3, viewportSize),
-                      child: const Icon(Icons.add_rounded),
-                    ),
-                    const SizedBox(height: 8),
-                    // Zoom Out Button
-                    FloatingActionButton.small(
-                      heroTag: 'zoom_out',
-                      tooltip: 'Zoom Out',
-                      backgroundColor: Colors.blueGrey.shade800,
-                      foregroundColor: Colors.white,
-                      onPressed: () => _zoom(0.77, viewportSize),
-                      child: const Icon(Icons.remove_rounded),
-                    ),
-                    const SizedBox(height: 8),
-                    // Fit Whole Graph
-                    FloatingActionButton.small(
-                      heroTag: 'zoom_fit',
-                      tooltip: 'Fit Whole Graph',
-                      backgroundColor: Colors.blueGrey.shade800,
-                      foregroundColor: Colors.white,
-                      onPressed: () => _fitGraphToScreen(viewportSize),
-                      child: const Icon(Icons.fit_screen_rounded),
-                    ),
-                  ],
+                child: Builder(
+                  builder: (context) {
+                    final fabBg = isLight ? Theme.of(context).colorScheme.surface : Colors.blueGrey.shade800;
+                    final fabFg = isLight ? Theme.of(context).colorScheme.onSurface : Colors.white;
+
+                    return Column(
+                      children: [
+                        // Toggle Congestion Tool
+                        FloatingActionButton.small(
+                          heroTag: 'cong_btn',
+                          tooltip: 'Congestion & Road Block Mode',
+                          backgroundColor: _interactionMode == MapInteractionMode.congestion
+                              ? Colors.deepOrange
+                              : fabBg,
+                          foregroundColor: _interactionMode == MapInteractionMode.congestion
+                              ? Colors.white
+                              : fabFg,
+                          onPressed: () {
+                            setState(() {
+                              _interactionMode = _interactionMode == MapInteractionMode.congestion
+                                  ? MapInteractionMode.none
+                                  : MapInteractionMode.congestion;
+                            });
+                          },
+                          child: const Icon(Icons.traffic_rounded),
+                        ),
+                        const SizedBox(height: 8),
+                        // Toggle Select Start Node
+                        FloatingActionButton.small(
+                          heroTag: 'start_btn',
+                          tooltip: 'Set Start Location',
+                          backgroundColor: _interactionMode == MapInteractionMode.selectStart
+                              ? (isLight ? const Color(0xFF0D9488) : Colors.tealAccent.shade700)
+                              : fabBg,
+                          foregroundColor: _interactionMode == MapInteractionMode.selectStart
+                              ? Colors.white
+                              : fabFg,
+                          onPressed: () {
+                            setState(() {
+                              _interactionMode = _interactionMode == MapInteractionMode.selectStart
+                                  ? MapInteractionMode.none
+                                  : MapInteractionMode.selectStart;
+                            });
+                          },
+                          child: const Icon(Icons.flag_rounded),
+                        ),
+                        const SizedBox(height: 8),
+                        // Zoom In Button
+                        FloatingActionButton.small(
+                          heroTag: 'zoom_in',
+                          tooltip: 'Zoom In',
+                          backgroundColor: fabBg,
+                          foregroundColor: fabFg,
+                          onPressed: () => _zoom(1.3, viewportSize),
+                          child: const Icon(Icons.add_rounded),
+                        ),
+                        const SizedBox(height: 8),
+                        // Zoom Out Button
+                        FloatingActionButton.small(
+                          heroTag: 'zoom_out',
+                          tooltip: 'Zoom Out',
+                          backgroundColor: fabBg,
+                          foregroundColor: fabFg,
+                          onPressed: () => _zoom(0.77, viewportSize),
+                          child: const Icon(Icons.remove_rounded),
+                        ),
+                        const SizedBox(height: 8),
+                        // Fit Whole Graph
+                        FloatingActionButton.small(
+                          heroTag: 'zoom_fit',
+                          tooltip: 'Fit Whole Graph',
+                          backgroundColor: fabBg,
+                          foregroundColor: fabFg,
+                          onPressed: () => _fitGraphToScreen(viewportSize),
+                          child: const Icon(Icons.fit_screen_rounded),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
 
@@ -322,7 +358,7 @@ class _MapScreenState extends State<MapScreen> {
               Positioned(
                 left: 16,
                 bottom: 140,
-                child: _buildLegendCard(),
+                child: _buildLegendCard(context, mapColors, isLight),
               ),
 
               // 6. Bottom Navigation & Trip Control Dock
@@ -363,25 +399,36 @@ class _MapScreenState extends State<MapScreen> {
             if (state.status == SimulationStatus.idle && graph != null) ...[
               Row(
                 children: [
-                  const Icon(Icons.flag_rounded, color: Colors.green, size: 20),
+                  const Icon(Icons.flag_rounded, color: Colors.green, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Start: #${state.startNodeId ?? 1}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
                   const SizedBox(width: 8),
-                  Text('Start: Node #${state.startNodeId ?? 1}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                   const Spacer(),
-                  const Icon(Icons.local_hospital_rounded, color: Colors.red, size: 20),
-                  const SizedBox(width: 6),
-                  DropdownButton<Hospital>(
-                    value: state.targetHospital,
-                    underline: const SizedBox(),
-                    items: (graph.hospitals as List<Hospital>).map((Hospital h) {
-                      return DropdownMenuItem<Hospital>(
-                        value: h,
-                        child: Text(h.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                      );
-                    }).toList(),
-                    onChanged: (Hospital? h) {
-                      if (h != null) controller.selectHospital(h);
-                    },
+                  const Icon(Icons.local_hospital_rounded, color: Colors.red, size: 16),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: DropdownButton<Hospital>(
+                      value: state.targetHospital,
+                      underline: const SizedBox(),
+                      isDense: true,
+                      isExpanded: true,
+                      items: (graph.hospitals as List<Hospital>).map((Hospital h) {
+                        return DropdownMenuItem<Hospital>(
+                          value: h,
+                          child: Text(
+                            h.name,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (Hospital? h) {
+                        if (h != null) controller.selectHospital(h);
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -390,84 +437,158 @@ class _MapScreenState extends State<MapScreen> {
 
             Row(
               children: [
-                // START / PAUSE / RESUME / NEW TRIP buttons
-                if (state.status == SimulationStatus.idle)
+                if (state.status == SimulationStatus.idle) ...[
                   Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade700,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    flex: 6,
+                    child: SizedBox(
+                      height: 48,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.red.shade700,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label: const Text(
+                          'Start Trip',
+                          maxLines: 1,
+                          softWrap: false,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        onPressed: () {
+                          setState(() => _interactionMode = MapInteractionMode.none);
+                          controller.startTrip();
+                        },
                       ),
-                      icon: const Icon(Icons.play_arrow_rounded),
-                      label: const Text('START TRIP', style: TextStyle(fontWeight: FontWeight.bold)),
-                      onPressed: () {
-                        setState(() => _interactionMode = MapInteractionMode.none);
-                        controller.startTrip();
-                      },
-                    ),
-                  )
-                else if (state.status == SimulationStatus.enRoute) ...[
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: state.isPaused ? Colors.green.shade700 : Colors.amber.shade800,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      icon: Icon(state.isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded),
-                      label: Text(state.isPaused ? 'RESUME' : 'PAUSE',
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                      onPressed: () => state.isPaused ? controller.resumeTrip() : controller.pauseTrip(),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 4,
+                    child: _buildSpeedChips(controller),
+                  ),
+                ] else if (state.status == SimulationStatus.enRoute ||
+                    state.status == SimulationStatus.heldAtSignal) ...[
+                  Expanded(
+                    flex: 3,
+                    child: SizedBox(
+                      height: 48,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: state.isPaused ? Colors.green.shade700 : Colors.amber.shade700,
+                          foregroundColor: state.isPaused ? Colors.white : Colors.black87,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: Icon(
+                          state.isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                          size: 18,
+                        ),
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            state.isPaused ? 'Resume' : 'Pause',
+                            maxLines: 1,
+                            softWrap: false,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                        ),
+                        onPressed: () =>
+                            state.isPaused ? controller.resumeTrip() : controller.pauseTrip(),
+                      ),
                     ),
-                    icon: const Icon(Icons.restart_alt_rounded),
-                    label: const Text('NEW TRIP'),
-                    onPressed: () => controller.resetTrip(),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    flex: 3,
+                    child: SizedBox(
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(Icons.restart_alt_rounded, size: 18),
+                        label: const FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'New Trip',
+                            maxLines: 1,
+                            softWrap: false,
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                        ),
+                        onPressed: () => controller.resetTrip(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    flex: 4,
+                    child: _buildSpeedChips(controller),
                   ),
                 ] else ...[
                   Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.indigo.shade700,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    flex: 6,
+                    child: SizedBox(
+                      height: 48,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.indigo.shade700,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(Icons.replay_rounded),
+                        label: const Text(
+                          'New Trip',
+                          maxLines: 1,
+                          softWrap: false,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        onPressed: () => controller.resetTrip(),
                       ),
-                      icon: const Icon(Icons.replay_rounded),
-                      label: const Text('NEW TRIP', style: TextStyle(fontWeight: FontWeight.bold)),
-                      onPressed: () => controller.resetTrip(),
                     ),
                   ),
-                ],
-
-                const SizedBox(width: 12),
-
-                // Speed scale chips (1x, 2x, 5x)
-                SegmentedButton<double>(
-                  segments: const [
-                    ButtonSegment(value: 1.0, label: Text('1x', style: TextStyle(fontSize: 11))),
-                    ButtonSegment(value: 2.0, label: Text('2x', style: TextStyle(fontSize: 11))),
-                    ButtonSegment(value: 5.0, label: Text('5x', style: TextStyle(fontSize: 11))),
-                  ],
-                  selected: {controller.timeScale},
-                  onSelectionChanged: (val) => controller.setTimeScale(val.first),
-                  style: const ButtonStyle(
-                    visualDensity: VisualDensity.compact,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 4,
+                    child: _buildSpeedChips(controller),
                   ),
-                ),
+                ],
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSpeedChips(SimulationController controller) {
+    return SizedBox(
+      height: 48,
+      child: SegmentedButton<double>(
+        showSelectedIcon: false,
+        segments: const [
+          ButtonSegment(
+            value: 1.0,
+            label: Text('1x', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+          ),
+          ButtonSegment(
+            value: 2.0,
+            label: Text('2x', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+          ),
+          ButtonSegment(
+            value: 5.0,
+            label: Text('5x', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+          ),
+        ],
+        selected: {controller.timeScale},
+        onSelectionChanged: (val) => controller.setTimeScale(val.first),
+        style: SegmentedButton.styleFrom(
+          visualDensity: VisualDensity.compact,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );
@@ -562,13 +683,16 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  Widget _buildLegendCard() {
+  Widget _buildLegendCard(BuildContext context, MapColors mapColors, bool isLight) {
+    final theme = Theme.of(context);
     return Card(
-      color: const Color(0xEE1A2230),
-      elevation: 4,
+      color: isLight ? theme.colorScheme.surface : const Color(0xEE1A2230),
+      elevation: isLight ? 2 : 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        side: BorderSide(
+          color: isLight ? theme.colorScheme.outlineVariant : Colors.white.withValues(alpha: 0.1),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -576,30 +700,55 @@ class _MapScreenState extends State<MapScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'TRAFFIC LEGEND',
               style: TextStyle(
-                color: Colors.white70,
+                color: isLight ? theme.colorScheme.onSurfaceVariant : Colors.white70,
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
               ),
             ),
             const SizedBox(height: 6),
-            _buildLegendRow(const Color(0xFF607D8B), 'Open (1x)', isDashed: false),
+            _buildLegendRow(
+              mapColors.openRoad,
+              'Open (1x)',
+              isDashed: false,
+              textColor: isLight ? theme.colorScheme.onSurface : Colors.white,
+            ),
             const SizedBox(height: 4),
-            _buildLegendRow(const Color(0xFFFF9800), 'Moderate (2x)', isDashed: false),
+            _buildLegendRow(
+              mapColors.moderateRoad,
+              'Moderate (2x)',
+              isDashed: false,
+              textColor: isLight ? theme.colorScheme.onSurface : Colors.white,
+            ),
             const SizedBox(height: 4),
-            _buildLegendRow(const Color(0xFFE53935), 'Heavy (4x)', isDashed: false),
+            _buildLegendRow(
+              mapColors.heavyRoad,
+              'Heavy (4x)',
+              isDashed: false,
+              textColor: isLight ? theme.colorScheme.onSurface : Colors.white,
+            ),
             const SizedBox(height: 4),
-            _buildLegendRow(const Color(0xFFD32F2F), 'Blocked', isDashed: true),
+            _buildLegendRow(
+              mapColors.blockedRoad,
+              'Blocked',
+              isDashed: true,
+              textColor: isLight ? theme.colorScheme.onSurface : Colors.white,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLegendRow(Color color, String label, {required bool isDashed}) {
+  Widget _buildLegendRow(
+    Color color,
+    String label, {
+    required bool isDashed,
+    required Color textColor,
+  }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -621,7 +770,7 @@ class _MapScreenState extends State<MapScreen> {
         const SizedBox(width: 8),
         Text(
           label,
-          style: const TextStyle(color: Colors.white, fontSize: 11),
+          style: TextStyle(color: textColor, fontSize: 11),
         ),
       ],
     );

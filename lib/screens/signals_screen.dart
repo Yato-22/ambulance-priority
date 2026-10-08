@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/constants.dart';
+import '../models/sim_state.dart';
 import '../models/traffic_signal.dart';
 import '../simulation/simulation_controller.dart';
 import '../widgets/signal_card.dart';
@@ -24,8 +25,12 @@ class _SignalsScreenState extends State<SignalsScreen> {
 
     final signals = List<TrafficSignal>.from(state.signals);
 
-    // Sort signals: active signal on top, then by distance to ambulance
+    // Sort signals: held signal or active signal on top, then by distance to ambulance
     signals.sort((a, b) {
+      if (state.status == SimulationStatus.heldAtSignal) {
+        if (a.id == state.heldSignalId) return -1;
+        if (b.id == state.heldSignalId) return 1;
+      }
       if (a.id == state.activeSignalId) return -1;
       if (b.id == state.activeSignalId) return 1;
       final da = a.distanceToAmbulance ?? 999999.0;
@@ -61,9 +66,9 @@ class _SignalsScreenState extends State<SignalsScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildKpiCard('Total Signals', '$totalSignals', Icons.traffic_rounded, Colors.blueGrey),
-                _buildKpiCard('Priority Green', '$priorityGreenCount', Icons.flash_on_rounded, Colors.green),
-                _buildKpiCard('Overridden', '$overrideCount', Icons.shield_rounded, Colors.purple),
+                _buildKpiCard(context, 'Total Signals', '$totalSignals', Icons.traffic_rounded, Colors.blueGrey),
+                _buildKpiCard(context, 'Priority Green', '$priorityGreenCount', Icons.flash_on_rounded, Colors.green),
+                _buildKpiCard(context, 'Overridden', '$overrideCount', Icons.shield_rounded, Colors.purple),
               ],
             ),
           ),
@@ -76,6 +81,7 @@ class _SignalsScreenState extends State<SignalsScreen> {
               itemBuilder: (context, index) {
                 final sig = signals[index];
                 final isActive = sig.id == state.activeSignalId;
+                final isHeld = state.status == SimulationStatus.heldAtSignal && sig.id == state.heldSignalId;
 
                 // Find road name connected to this node
                 String? roadName;
@@ -89,6 +95,7 @@ class _SignalsScreenState extends State<SignalsScreen> {
                 return SignalCard(
                   signal: sig,
                   isActive: isActive,
+                  isHeld: isHeld,
                   roadName: roadName,
                   onOverrideChanged: (overrideState) {
                     controller.setSignalOverride(sig.id, overrideState);
@@ -214,7 +221,7 @@ class _SignalsScreenState extends State<SignalsScreen> {
     );
   }
 
-  Widget _buildKpiCard(String label, String value, IconData icon, Color color) {
+  Widget _buildKpiCard(BuildContext context, String label, String value, IconData icon, Color color) {
     return Column(
       children: [
         Icon(icon, color: color, size: 22),
@@ -225,7 +232,7 @@ class _SignalsScreenState extends State<SignalsScreen> {
         ),
         Text(
           label,
-          style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 11),
         ),
       ],
     );

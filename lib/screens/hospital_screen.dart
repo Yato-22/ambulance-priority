@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../algorithms/astar.dart';
 import '../models/sim_state.dart';
 import '../simulation/simulation_controller.dart';
+import '../theme/app_theme.dart';
 import '../widgets/schematic_graph_painter.dart';
 
 /// Hospital Screen: Emergency Department Dashboard for patient reception preparation.
 class HospitalScreen extends StatelessWidget {
-  const HospitalScreen({super.key});
+  final VoidCallback? onTapMap;
+
+  const HospitalScreen({super.key, this.onTapMap});
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +41,10 @@ class HospitalScreen extends StatelessWidget {
       prepColor = Colors.green.shade800;
     }
 
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final mapColors = Theme.of(context).extension<MapColors>() ??
+        (isLight ? MapColors.light : MapColors.dark);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(hospital?.name ?? 'Emergency Ward Reception'),
@@ -50,13 +58,22 @@ class HospitalScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.indigo.shade900, Colors.blueGrey.shade900],
+                  colors: isLight
+                      ? [const Color(0xFFD6E4F5), const Color(0xFFE8F1FA)]
+                      : [Colors.indigo.shade900, Colors.blueGrey.shade900],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4)),
+                border: isLight
+                    ? Border.all(color: const Color(0xFFCBD5E1))
+                    : null,
+                boxShadow: [
+                  BoxShadow(
+                    color: isLight ? Colors.black.withValues(alpha: 0.06) : Colors.black26,
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               child: Column(
@@ -64,21 +81,41 @@ class HospitalScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'ESTIMATED TIME OF ARRIVAL',
-                        style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold),
+                      Expanded(
+                        child: Text(
+                          'ESTIMATED TIME OF ARRIVAL',
+                          style: TextStyle(
+                            color: isLight ? const Color(0xFF475569) : Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: state.status == SimulationStatus.arrived
                               ? Colors.green
-                              : (state.status == SimulationStatus.enRoute ? Colors.amber.shade700 : Colors.grey),
+                              : (state.status == SimulationStatus.heldAtSignal
+                                  ? (isLight ? const Color(0xFFDC2626) : Colors.redAccent.shade700)
+                                  : (state.status == SimulationStatus.enRoute
+                                      ? (isLight ? const Color(0xFFD97706) : Colors.amber.shade700)
+                                      : (isLight ? const Color(0xFF64748B) : Colors.grey))),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          state.status.name.toUpperCase(),
-                          style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 10),
+                          state.status == SimulationStatus.heldAtSignal
+                              ? 'HELD AT SIGNAL'
+                              : state.status.name.toUpperCase(),
+                          style: TextStyle(
+                            color: state.status == SimulationStatus.heldAtSignal || isLight
+                                ? Colors.white
+                                : Colors.black87,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
                         ),
                       ),
                     ],
@@ -86,8 +123,8 @@ class HospitalScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     state.status == SimulationStatus.arrived ? 'ARRIVED' : etaCountdown,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: isLight ? const Color(0xFF1E293B) : Colors.white,
                       fontSize: 36,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -0.5,
@@ -97,7 +134,10 @@ class HospitalScreen extends StatelessWidget {
                   Text(
                     'Remaining Distance: ${(state.remainingDistanceM / 1000).toStringAsFixed(2)} km • '
                     'Signals Cleared: ${state.signalsClearedCount}',
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                    style: TextStyle(
+                      color: isLight ? const Color(0xFF475569) : Colors.white70,
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
@@ -108,7 +148,7 @@ class HospitalScreen extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: prepColor.withValues(alpha: 0.12),
+                color: isLight ? prepColor.withValues(alpha: 0.1) : prepColor.withValues(alpha: 0.12),
                 border: Border.all(color: prepColor),
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -128,68 +168,56 @@ class HospitalScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // 3. Mini Schematic Route Overview
+            // 3. Mini Schematic Route Overview (fixed height 260px, compact mode, live repaint)
             if (controller.graph != null)
-              Container(
-                height: 180,
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade700),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: CustomPaint(
-                  size: const Size(double.infinity, 180),
-                  painter: SchematicGraphPainter(
-                    graph: controller.graph!,
-                    projection: CanvasProjection.fromGraph(
-                      controller.graph!,
-                      width: 360,
-                      height: 180,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: isLight ? Theme.of(context).colorScheme.outlineVariant : Colors.grey.shade700,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    ambulance: state.ambulance,
-                    signals: state.signals,
-                    activeSignalId: state.activeSignalId,
-                    triggerRadiusM: controller.greenTriggerRadiusM,
-                    routeNodeIds: state.routeNodeIds,
-                    routePolyline: state.routePolyline,
-                    startNodeId: state.startNodeId,
-                    targetHospital: state.targetHospital,
-                    isEnRoute: state.status == SimulationStatus.enRoute,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: SizedBox(
+                        height: 260,
+                        width: double.infinity,
+                        child: GestureDetector(
+                          onTap: onTapMap,
+                          behavior: HitTestBehavior.opaque,
+                          child: CustomPaint(
+                            painter: SchematicGraphPainter(
+                              graph: controller.graph!,
+                              ambulance: state.ambulance,
+                              signals: state.signals,
+                              activeSignalId: state.activeSignalId,
+                              triggerRadiusM: controller.greenTriggerRadiusM,
+                              routeNodeIds: state.routeNodeIds,
+                              routePolyline: state.routePolyline,
+                              startNodeId: state.startNodeId,
+                              targetHospital: state.targetHospital,
+                              isEnRoute: state.status == SimulationStatus.enRoute ||
+                                  state.status == SimulationStatus.heldAtSignal,
+                              isHeldAtSignal: state.status == SimulationStatus.heldAtSignal,
+                              heldSignalId: state.heldSignalId,
+                              compact: true,
+                              mapColors: mapColors,
+                              repaint: controller,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
 
             // 4. Algorithm Metrics / Dijkstra Comparison
-            if (controller.showDijkstraComparison && state.nodesExpandedDijkstra != null)
-              Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.purple.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.purple.shade200),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Column(
-                      children: [
-                        const Text('A* Nodes Expanded', style: TextStyle(fontSize: 12, color: Colors.purple)),
-                        Text('${state.nodesExpandedAStar}',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        const Text('Dijkstra Nodes Expanded', style: TextStyle(fontSize: 12, color: Colors.purple)),
-                        Text('${state.nodesExpandedDijkstra}',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+            _buildSearchEfficiencyCard(context, controller, state),
 
             // 5. Trip Milestone Event Timeline
             Padding(
@@ -198,8 +226,14 @@ class HospitalScreen extends StatelessWidget {
                 children: [
                   const Icon(Icons.history_rounded, size: 20),
                   const SizedBox(width: 8),
-                  const Text('Trip Milestones Timeline', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  const Spacer(),
+                  const Expanded(
+                    child: Text(
+                      'Trip Milestones Timeline',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Text('${state.timelineEvents.length} events', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
                 ],
               ),
@@ -264,6 +298,223 @@ class HospitalScreen extends StatelessWidget {
             const SizedBox(height: 24),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSearchEfficiencyCard(
+    BuildContext context,
+    SimulationController controller,
+    SimState state,
+  ) {
+    if (!controller.showDijkstraComparison) return const SizedBox.shrink();
+
+    int astarNodes;
+    int dijkstraNodes;
+    double astarCostVal;
+    double dijkstraCostVal;
+
+    if (state.nodesExpandedDijkstra != null) {
+      astarNodes = state.nodesExpandedAStar;
+      dijkstraNodes = state.nodesExpandedDijkstra!;
+      astarCostVal = state.astarCost ?? 0.0;
+      dijkstraCostVal = state.dijkstraCost ?? 0.0;
+    } else if (controller.graph != null && state.targetHospital != null) {
+      final startId = state.startNodeId ?? 1;
+      final goalId = state.targetHospital!.nodeId;
+      final aRes = AStarRouter.findRoute(
+        graph: controller.graph!,
+        startNodeId: startId,
+        goalNodeId: goalId,
+      );
+      final dRes = AStarRouter.findRouteDijkstra(
+        graph: controller.graph!,
+        startNodeId: startId,
+        goalNodeId: goalId,
+      );
+      if (aRes != null && dRes != null) {
+        astarNodes = aRes.nodesExpanded;
+        dijkstraNodes = dRes.nodesExpanded;
+        astarCostVal = aRes.totalCost;
+        dijkstraCostVal = dRes.totalCost;
+      } else {
+        return const SizedBox.shrink();
+      }
+    } else {
+      return const SizedBox.shrink();
+    }
+
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final diff = dijkstraNodes - astarNodes;
+    final String effortText;
+    if (dijkstraNodes > 0 && diff > 0) {
+      final pct = ((diff / dijkstraNodes) * 100).round();
+      effortText = 'A* explored $pct% fewer nodes';
+    } else {
+      effortText = 'Same effort on this graph';
+    }
+
+    final costDiff = (astarCostVal - dijkstraCostVal).abs();
+    final bool isCostMismatch = costDiff > 1e-6;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outlineVariant),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Title
+          Center(
+            child: Text(
+              'Search efficiency (same route, same cost)',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Two columns: A* and Dijkstra
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      'A*',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$astarNodes',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'nodes expanded',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                height: 48,
+                width: 1,
+                color: colorScheme.outlineVariant,
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      'Dijkstra',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$dijkstraNodes',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'nodes expanded',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Divider(height: 1, color: colorScheme.outlineVariant),
+          const SizedBox(height: 10),
+
+          // Third line: efficiency percentage
+          Center(
+            child: Text(
+              effortText,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+
+          // Fourth line: Route cost comparison
+          if (isCostMismatch)
+            Container(
+              margin: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.red.shade900.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.shade700),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Route cost mismatch: A* = ${astarCostVal.toStringAsFixed(2)}, Dijkstra = ${dijkstraCostVal.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      color: Colors.red.shade700,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Center(
+              child: Text(
+                'Route cost: A* = ${astarCostVal.toStringAsFixed(1)}, Dijkstra = ${dijkstraCostVal.toStringAsFixed(1)}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

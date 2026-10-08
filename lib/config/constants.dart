@@ -4,6 +4,10 @@ class AppConstants {
   static const double greenTriggerRadiusM = 200.0;
   static const double arrivalRadiusM = 15.0;
   static const double revertHysteresisM = 5.0;
+  static const double stopLineDistanceM = 10.0;
+  // ignore: constant_identifier_names
+  static const double STOP_LINE_DISTANCE_M = 10.0;
+  static const double stopRampDistanceM = 40.0;
 
   // Ambulance movement
   static const double defaultSpeedKmh = 40.0;

@@ -5,6 +5,7 @@ import '../models/traffic_signal.dart';
 class SignalCard extends StatelessWidget {
   final TrafficSignal signal;
   final bool isActive;
+  final bool isHeld;
   final String? roadName;
   final void Function(SignalOverride override) onOverrideChanged;
 
@@ -12,6 +13,7 @@ class SignalCard extends StatelessWidget {
     super.key,
     required this.signal,
     this.isActive = false,
+    this.isHeld = false,
     this.roadName,
     required this.onOverrideChanged,
   });
@@ -49,16 +51,23 @@ class SignalCard extends StatelessWidget {
         ? '${signal.distanceToAmbulance!.toStringAsFixed(0)} m'
         : 'N/A';
 
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+
     return Card(
-      elevation: isActive ? 4 : 1,
+      elevation: (isActive || isHeld) ? 4 : 1,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
         side: BorderSide(
-          color: isActive
-              ? Colors.tealAccent.shade700
-              : (signal.isOverridden ? Colors.purpleAccent : Colors.transparent),
-          width: isActive ? 2 : 1,
+          color: isHeld
+              ? (isLight ? const Color(0xFFDC2626) : Colors.redAccent)
+              : (isActive
+                  ? (isLight ? const Color(0xFF0D9488) : Colors.tealAccent.shade700)
+                  : (signal.isOverridden
+                      ? (isLight ? const Color(0xFF9333EA) : Colors.purpleAccent)
+                      : (isLight ? theme.colorScheme.outlineVariant : Colors.transparent))),
+          width: (isActive || isHeld) ? 2 : 1,
         ),
       ),
       child: Padding(
@@ -71,13 +80,13 @@ class SignalCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.blueGrey.shade900,
+                    color: isLight ? theme.colorScheme.primaryContainer : Colors.blueGrey.shade900,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     signal.id,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: isLight ? theme.colorScheme.onPrimaryContainer : Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
@@ -95,7 +104,7 @@ class SignalCard extends StatelessWidget {
                       ),
                       Text(
                         'Source: ${signal.signalSource} • Lat: ${signal.lat.toStringAsFixed(4)}, Lon: ${signal.lon.toStringAsFixed(4)}',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 11),
                       ),
                     ],
                   ),
@@ -103,7 +112,7 @@ class SignalCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: stateBadgeColor.withValues(alpha: 0.15),
+                    color: stateBadgeColor.withValues(alpha: isLight ? 0.12 : 0.15),
                     border: Border.all(color: stateBadgeColor),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -128,32 +137,55 @@ class SignalCard extends StatelessWidget {
             const SizedBox(height: 10),
             Row(
               children: [
-                Icon(Icons.directions_car_rounded, size: 16, color: Colors.grey.shade600),
+                Icon(Icons.directions_car_rounded, size: 16, color: theme.colorScheme.onSurfaceVariant),
                 const SizedBox(width: 4),
                 Text(
                   'Distance to Ambulance: ',
-                  style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                 ),
                 Text(
                   distanceStr,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
-                    color: (signal.distanceToAmbulance ?? 999) < 200 ? Colors.green.shade700 : Colors.black87,
+                    color: (signal.distanceToAmbulance ?? 999) < 200
+                        ? (isLight ? const Color(0xFF16A34A) : Colors.green.shade700)
+                        : theme.colorScheme.onSurface,
                   ),
                 ),
                 const Spacer(),
-                if (isActive)
+                if (isHeld)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.teal.shade50,
+                      color: isLight ? const Color(0xFFFEF3C7) : Colors.amber.shade100,
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.teal.shade400),
+                      border: Border.all(color: isLight ? const Color(0xFFD97706) : Colors.amber.shade800),
+                    ),
+                    child: Text(
+                      'Ambulance waiting',
+                      style: TextStyle(
+                        color: isLight ? const Color(0xFF92400E) : Colors.amber.shade900,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                else if (isActive)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isLight ? const Color(0xFFCCFBF1) : Colors.teal.shade50,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: isLight ? const Color(0xFF0D9488) : Colors.teal.shade400),
                     ),
                     child: Text(
                       'ACTIVE ON ROUTE',
-                      style: TextStyle(color: Colors.teal.shade800, fontSize: 10, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: isLight ? const Color(0xFF115E59) : Colors.teal.shade800,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
               ],

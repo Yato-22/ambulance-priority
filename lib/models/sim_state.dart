@@ -7,6 +7,7 @@ enum SimulationStatus {
   idle,
   routing,
   enRoute,
+  heldAtSignal,
   arrived,
   noRoute,
 }
@@ -59,6 +60,8 @@ class SimState {
   final Ambulance ambulance;
   final List<TrafficSignal> signals;
   final String? activeSignalId;
+  final String? heldSignalId;
+  final double signalWaitTimeSeconds;
   final List<int> routeNodeIds;
   final List<List<double>> routePolyline; // [[lat, lon], ...]
   final List<double> cumulativeDistances; // meters along polyline
@@ -70,6 +73,8 @@ class SimState {
   final int signalsClearedCount;
   final int nodesExpandedAStar;
   final int? nodesExpandedDijkstra;
+  final double? astarCost;
+  final double? dijkstraCost;
   final int rerouteCount;
   final bool isPaused;
   final double timeScale;
@@ -83,6 +88,8 @@ class SimState {
     required this.ambulance,
     required this.signals,
     this.activeSignalId,
+    this.heldSignalId,
+    this.signalWaitTimeSeconds = 0.0,
     this.routeNodeIds = const [],
     this.routePolyline = const [],
     this.cumulativeDistances = const [],
@@ -94,6 +101,8 @@ class SimState {
     this.signalsClearedCount = 0,
     this.nodesExpandedAStar = 0,
     this.nodesExpandedDijkstra,
+    this.astarCost,
+    this.dijkstraCost,
     this.rerouteCount = 0,
     this.isPaused = false,
     this.timeScale = 1.0,
@@ -121,6 +130,9 @@ class SimState {
     Ambulance? ambulance,
     List<TrafficSignal>? signals,
     String? activeSignalId,
+    String? heldSignalId,
+    bool clearHeldSignal = false,
+    double? signalWaitTimeSeconds,
     List<int>? routeNodeIds,
     List<List<double>>? routePolyline,
     List<double>? cumulativeDistances,
@@ -132,6 +144,9 @@ class SimState {
     int? signalsClearedCount,
     int? nodesExpandedAStar,
     int? nodesExpandedDijkstra,
+    double? astarCost,
+    double? dijkstraCost,
+    bool clearCostComparison = false,
     int? rerouteCount,
     bool? isPaused,
     double? timeScale,
@@ -145,6 +160,8 @@ class SimState {
       ambulance: ambulance ?? this.ambulance,
       signals: signals ?? this.signals,
       activeSignalId: activeSignalId ?? this.activeSignalId,
+      heldSignalId: clearHeldSignal ? null : (heldSignalId ?? this.heldSignalId),
+      signalWaitTimeSeconds: signalWaitTimeSeconds ?? this.signalWaitTimeSeconds,
       routeNodeIds: routeNodeIds ?? this.routeNodeIds,
       routePolyline: routePolyline ?? this.routePolyline,
       cumulativeDistances: cumulativeDistances ?? this.cumulativeDistances,
@@ -156,6 +173,8 @@ class SimState {
       signalsClearedCount: signalsClearedCount ?? this.signalsClearedCount,
       nodesExpandedAStar: nodesExpandedAStar ?? this.nodesExpandedAStar,
       nodesExpandedDijkstra: nodesExpandedDijkstra ?? this.nodesExpandedDijkstra,
+      astarCost: clearCostComparison ? null : (astarCost ?? this.astarCost),
+      dijkstraCost: clearCostComparison ? null : (dijkstraCost ?? this.dijkstraCost),
       rerouteCount: rerouteCount ?? this.rerouteCount,
       isPaused: isPaused ?? this.isPaused,
       timeScale: timeScale ?? this.timeScale,

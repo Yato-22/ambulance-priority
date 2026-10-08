@@ -37,6 +37,7 @@ class SignalManager {
   List<TrafficSignal> get signals => _signals.values.toList();
   String? get activeSignalId => _activeSignalId;
   int get clearedCount => _clearedCount;
+  Set<String> get clearedSignalIds => Set.unmodifiable(_clearedSignalIds);
 
   /// Initializes signals from the RoadGraph with staggered initial cycle offsets.
   void initFromGraph(RoadGraph graph) {

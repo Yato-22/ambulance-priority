@@ -144,6 +144,9 @@ class AmbulanceMover {
   }
 
   /// Advances the ambulance forward by dt seconds at current speed.
+  /// If [stopLineDistanceM] is provided (e.g. approaching a red/forced-red signal),
+  /// the ambulance smoothly decelerates over the last [AppConstants.stopRampDistanceM]
+  /// and is strictly clamped so it never crosses the stop line.
   static Ambulance advance({
     required Ambulance current,
     required RouteTrajectory trajectory,
@@ -151,6 +154,7 @@ class AmbulanceMover {
     required double dtSeconds,
     required double timeScale,
     RoadGraph? graph,
+    double? stopLineDistanceM,
   }) {
     if (trajectory.points.isEmpty) return current;
 
@@ -160,14 +164,68 @@ class AmbulanceMover {
         lon: trajectory.points.first[1],
         totalRouteDistanceM: 0.0,
         distanceTravelledM: 0.0,
+        speedMps: 0.0,
       );
     }
 
-    final deltaDistance = baseSpeedMps * dtSeconds * timeScale;
-    final newDistance = math.min(
-      current.distanceTravelledM + deltaDistance,
-      trajectory.totalDistanceMeters,
-    );
+    // Determine current edge congestion factor to modulate nominal speed
+    double nominalSpeed = baseSpeedMps;
+    if (graph != null && current.currentEdgeFrom != null && current.currentEdgeTo != null) {
+      final edge = graph.getEdge(current.currentEdgeFrom!, current.currentEdgeTo!) ??
+          graph.getEdge(current.currentEdgeTo!, current.currentEdgeFrom!);
+      if (edge != null && edge.currentCongestion > 1.0) {
+        nominalSpeed = baseSpeedMps / math.sqrt(edge.currentCongestion);
+        nominalSpeed = nominalSpeed.clamp(
+          (AppConstants.minSpeedKmh / 3.6),
+          baseSpeedMps,
+        );
+      }
+    }
+
+    double newDistance;
+    double effectiveSpeed;
+
+    if (stopLineDistanceM != null) {
+      final clampedStop = math.min(stopLineDistanceM, trajectory.totalDistanceMeters);
+      final distToStop = clampedStop - current.distanceTravelledM;
+
+      if (distToStop <= 0.05) {
+        // Stationary at stop line
+        newDistance = clampedStop;
+        effectiveSpeed = 0.0;
+      } else {
+        // Linear deceleration ramp over stopRampDistanceM (40m)
+        final ramp = (distToStop / AppConstants.stopRampDistanceM).clamp(0.05, 1.0);
+        final targetSpeed = nominalSpeed * ramp;
+
+        final stepDist = math.min(targetSpeed * dtSeconds * timeScale, distToStop);
+        newDistance = math.min(current.distanceTravelledM + stepDist, clampedStop);
+
+        if (clampedStop - newDistance <= 0.05) {
+          newDistance = clampedStop;
+          effectiveSpeed = 0.0;
+        } else {
+          effectiveSpeed = targetSpeed;
+        }
+      }
+    } else {
+      // Clear path / green signal: accelerate smoothly if resuming from stop
+      if (current.speedMps < nominalSpeed) {
+        const accel = 3.5; // m/s^2 smooth acceleration
+        effectiveSpeed = math.min(
+          nominalSpeed,
+          math.max(2.0, current.speedMps + (accel * dtSeconds * timeScale)),
+        );
+      } else {
+        effectiveSpeed = nominalSpeed;
+      }
+
+      final deltaDistance = effectiveSpeed * dtSeconds * timeScale;
+      newDistance = math.min(
+        current.distanceTravelledM + deltaDistance,
+        trajectory.totalDistanceMeters,
+      );
+    }
 
     // Locate the active polyline segment [k, k+1]
     final cDists = trajectory.cumulativeDistances;
@@ -198,19 +256,6 @@ class AmbulanceMover {
     } else if (trajectory.segmentEdges.isNotEmpty) {
       edgeFrom = trajectory.segmentEdges.last[0];
       edgeTo = trajectory.segmentEdges.last[1];
-    }
-
-    // Determine current edge congestion factor to modulate effective speed
-    double effectiveSpeed = baseSpeedMps;
-    if (graph != null && edgeFrom != null && edgeTo != null) {
-      final edge = graph.getEdge(edgeFrom, edgeTo) ?? graph.getEdge(edgeTo, edgeFrom);
-      if (edge != null && edge.currentCongestion > 1.0) {
-        effectiveSpeed = baseSpeedMps / math.sqrt(edge.currentCongestion);
-        effectiveSpeed = effectiveSpeed.clamp(
-          (AppConstants.minSpeedKmh / 3.6),
-          baseSpeedMps,
-        );
-      }
     }
 
     return Ambulance(

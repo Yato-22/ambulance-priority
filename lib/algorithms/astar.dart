@@ -51,12 +51,14 @@ class AStarRouter {
     required RoadGraph graph,
     required int startNodeId,
     required int goalNodeId,
+    Set<int> avoidNodeIds = const {},
   }) {
     return _search(
       graph: graph,
       startNodeId: startNodeId,
       goalNodeId: goalNodeId,
       useHeuristic: true,
+      avoidNodeIds: avoidNodeIds,
     );
   }
 
@@ -66,12 +68,14 @@ class AStarRouter {
     required RoadGraph graph,
     required int startNodeId,
     required int goalNodeId,
+    Set<int> avoidNodeIds = const {},
   }) {
     return _search(
       graph: graph,
       startNodeId: startNodeId,
       goalNodeId: goalNodeId,
       useHeuristic: false,
+      avoidNodeIds: avoidNodeIds,
     );
   }
 
@@ -80,6 +84,7 @@ class AStarRouter {
     required int startNodeId,
     required int goalNodeId,
     required bool useHeuristic,
+    Set<int> avoidNodeIds = const {},
   }) {
     final startNode = graph.nodes[startNodeId];
     final goalNode = graph.nodes[goalNodeId];
@@ -96,6 +101,10 @@ class AStarRouter {
         totalCost: 0.0,
         nodesExpanded: 0,
       );
+    }
+
+    if (avoidNodeIds.contains(goalNodeId)) {
+      return null;
     }
 
     // Min-heap priority queue keyed by fScore
@@ -159,6 +168,7 @@ class AStarRouter {
         }
 
         final neighborId = edge.to;
+        if (avoidNodeIds.contains(neighborId)) continue;
         if (closedSet.contains(neighborId)) continue;
 
         final neighborNode = graph.nodes[neighborId];
