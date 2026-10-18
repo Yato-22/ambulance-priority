@@ -31,6 +31,11 @@ class AppConstants {
   static const double minCongestionFactor = 1.0;
   static const double maxRandomCongestionFactor = 2.0;
 
+  // Road class speed factors
+  static const double speedFactorMajor = 1.0;
+  static const double speedFactorMinor = 0.6;
+  static const double maxClassSpeedFactor = 1.0;
+
   // Signal timing
   static const int normalCycleSeconds = 20;
 

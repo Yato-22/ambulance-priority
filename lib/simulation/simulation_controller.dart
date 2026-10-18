@@ -620,58 +620,65 @@ class SimulationController extends ChangeNotifier {
     final distA = Haversine.distanceMeters(amb.lat, amb.lon, nodeAObj.lat, nodeAObj.lon);
     final distB = Haversine.distanceMeters(amb.lat, amb.lon, nodeBObj.lat, nodeBObj.lon);
 
-    // Current edge congestion factor (ignoring blocked state per requirement 2)
-    final edgeAB = _graph!.getEdge(nodeA, nodeB) ?? _graph!.getEdge(nodeB, nodeA);
-    final edgeFactor = (edgeAB != null && !edgeAB.isBlocked) ? edgeAB.currentCongestion : 1.0;
+    // Current edge congestion and class speed factor (ignoring blocked state per requirement 2)
+    final edgeAB = _graph!.getEdge(nodeA, nodeB);
+    final edgeBA = _graph!.getEdge(nodeB, nodeA);
+    final currentEdge = edgeAB ?? edgeBA;
+    final edgeFactor = (currentEdge != null && !currentEdge.isBlocked) ? currentEdge.currentCongestion : 1.0;
+    final edgeSpeedFactor = currentEdge?.classSpeedFactor ?? 1.0;
 
-    final costToA = distA * edgeFactor;
-    final costToB = distB * edgeFactor;
+    final costToA = (distA / edgeSpeedFactor) * edgeFactor;
+    final costToB = (distB / edgeSpeedFactor) * edgeFactor;
 
-    // Evaluate Option A (exit backwards to nodeA)
+    // Evaluate Option A (exit backwards to nodeA) - only permitted if road is traversable from B to A
     RouteResult? resultA;
     double? totalCostA;
-    if (nodeA == goalId) {
-      totalCostA = costToA;
-      resultA = RouteResult(
-        nodeIds: [nodeA],
-        totalDistanceMeters: distA,
-        totalCost: costToA,
-        nodesExpanded: 0,
-      );
-    } else {
-      final res = AStarRouter.findRoute(
-        graph: _graph!,
-        startNodeId: nodeA,
-        goalNodeId: goalId,
-        avoidNodeIds: forcedRedNodeIds,
-      );
-      if (res != null) {
-        totalCostA = costToA + res.totalCost;
-        resultA = res;
+    if (edgeBA != null) {
+      if (nodeA == goalId) {
+        totalCostA = costToA;
+        resultA = RouteResult(
+          nodeIds: [nodeA],
+          totalDistanceMeters: distA,
+          totalCost: costToA,
+          nodesExpanded: 0,
+        );
+      } else {
+        final res = AStarRouter.findRoute(
+          graph: _graph!,
+          startNodeId: nodeA,
+          goalNodeId: goalId,
+          avoidNodeIds: forcedRedNodeIds,
+        );
+        if (res != null) {
+          totalCostA = costToA + res.totalCost;
+          resultA = res;
+        }
       }
     }
 
-    // Evaluate Option B (exit forward to nodeB)
+    // Evaluate Option B (exit forward to nodeB) - only permitted if road is traversable from A to B
     RouteResult? resultB;
     double? totalCostB;
-    if (nodeB == goalId) {
-      totalCostB = costToB;
-      resultB = RouteResult(
-        nodeIds: [nodeB],
-        totalDistanceMeters: distB,
-        totalCost: costToB,
-        nodesExpanded: 0,
-      );
-    } else {
-      final res = AStarRouter.findRoute(
-        graph: _graph!,
-        startNodeId: nodeB,
-        goalNodeId: goalId,
-        avoidNodeIds: forcedRedNodeIds,
-      );
-      if (res != null) {
-        totalCostB = costToB + res.totalCost;
-        resultB = res;
+    if (edgeAB != null) {
+      if (nodeB == goalId) {
+        totalCostB = costToB;
+        resultB = RouteResult(
+          nodeIds: [nodeB],
+          totalDistanceMeters: distB,
+          totalCost: costToB,
+          nodesExpanded: 0,
+        );
+      } else {
+        final res = AStarRouter.findRoute(
+          graph: _graph!,
+          startNodeId: nodeB,
+          goalNodeId: goalId,
+          avoidNodeIds: forcedRedNodeIds,
+        );
+        if (res != null) {
+          totalCostB = costToB + res.totalCost;
+          resultB = res;
+        }
       }
     }
 
@@ -938,10 +945,15 @@ class SimulationController extends ChangeNotifier {
 
     if (isInitial) {
       final startNode = _graph!.nodes[fromNodeId];
+      final initialEdge = (astarResult.nodeIds.length >= 2)
+          ? _graph!.getEdge(astarResult.nodeIds[0], astarResult.nodeIds[1])
+          : null;
+      final initialSpeed = baseSpeedMps * (initialEdge?.classSpeedFactor ?? 1.0);
+
       final amb = Ambulance(
         lat: startNode?.lat ?? _state.ambulance.lat,
         lon: startNode?.lon ?? _state.ambulance.lon,
-        speedMps: baseSpeedMps,
+        speedMps: initialSpeed,
         distanceTravelledM: 0.0,
         totalRouteDistanceM: newTrajectory.totalDistanceMeters,
         currentEdgeFrom: astarResult.nodeIds[0],

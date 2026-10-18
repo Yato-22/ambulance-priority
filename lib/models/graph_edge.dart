@@ -65,6 +65,28 @@ enum RoadState {
   }
 }
 
+/// Directionality of the road segment.
+enum RoadDirection {
+  twoWay,
+  oneWay;
+}
+
+/// Functional classification of the road.
+enum RoadClass {
+  major,
+  minor;
+
+  /// Speed factor applied to ambulance travel speed on this road class.
+  double get speedFactor {
+    switch (this) {
+      case RoadClass.major:
+        return AppConstants.speedFactorMajor;
+      case RoadClass.minor:
+        return AppConstants.speedFactorMinor;
+    }
+  }
+}
+
 /// Represents a directed street segment connecting two graph nodes.
 class GraphEdge {
   final int from;
@@ -72,7 +94,10 @@ class GraphEdge {
   final double length;
   final String name;
   RoadState state;
-  final bool oneway;
+  final RoadDirection direction;
+  final RoadClass roadClass;
+  final int? permittedFromNode;
+  final int? permittedToNode;
   final List<List<double>> geometry; // [[lat, lon], ...]
 
   GraphEdge({
@@ -81,11 +106,20 @@ class GraphEdge {
     required this.length,
     required this.name,
     this.state = RoadState.open,
-    this.oneway = false,
+    RoadDirection? direction,
+    this.roadClass = RoadClass.major,
+    int? permittedFromNode,
+    int? permittedToNode,
+    bool? oneway,
     List<List<double>>? geometry,
     double? baseCongestion,
     double? currentCongestion,
-  }) : geometry = geometry ?? const [] {
+  })  : direction = direction ?? ((oneway == true) ? RoadDirection.oneWay : RoadDirection.twoWay),
+        permittedFromNode = permittedFromNode ??
+            ((direction == RoadDirection.oneWay || oneway == true) ? from : null),
+        permittedToNode = permittedToNode ??
+            ((direction == RoadDirection.oneWay || oneway == true) ? to : null),
+        geometry = geometry ?? const [] {
     if (currentCongestion != null && currentCongestion >= AppConstants.blockedThreshold) {
       state = RoadState.blocked;
     } else if (currentCongestion != null && currentCongestion >= AppConstants.ROAD_FACTOR_HEAVY) {
@@ -96,6 +130,14 @@ class GraphEdge {
   }
 
   bool get isBlocked => state == RoadState.blocked;
+  bool get oneway => direction == RoadDirection.oneWay;
+  bool get isOneWay => direction == RoadDirection.oneWay;
+  bool get isTwoWay => direction == RoadDirection.twoWay;
+  bool get isMajor => roadClass == RoadClass.major;
+  bool get isMinor => roadClass == RoadClass.minor;
+
+  /// Speed factor associated with this road's class.
+  double get classSpeedFactor => roadClass.speedFactor;
 
   /// Effective congestion multiplier.
   double get currentCongestion => state.factor;
@@ -114,8 +156,10 @@ class GraphEdge {
 
   double get baseCongestion => 1.0;
 
-  /// Effective cost used for A* routing: length * congestion factor.
-  double get effectiveCost => isBlocked ? double.infinity : length * state.factor;
+  /// Effective cost used for A* routing: travel time = (length / classSpeedFactor) * congestion factor.
+  /// Blocked roads are never used (infinite cost).
+  double get effectiveCost =>
+      isBlocked ? double.infinity : (length / classSpeedFactor) * state.factor;
 
   /// Resets dynamic congestion back to open.
   void resetCongestion() {
@@ -151,13 +195,32 @@ class GraphEdge {
       }
     }
 
+    final dirStr = json['direction']?.toString();
+    final direction = dirStr != null
+        ? RoadDirection.values.firstWhere(
+            (d) => d.name == dirStr,
+            orElse: () => (json['oneway'] == true ? RoadDirection.oneWay : RoadDirection.twoWay),
+          )
+        : (json['oneway'] == true ? RoadDirection.oneWay : RoadDirection.twoWay);
+
+    final classStr = json['road_class']?.toString() ?? json['class']?.toString();
+    final rClass = classStr != null
+        ? RoadClass.values.firstWhere(
+            (c) => c.name == classStr,
+            orElse: () => RoadClass.major,
+          )
+        : RoadClass.major;
+
     return GraphEdge(
       from: json['from'] as int,
       to: json['to'] as int,
       length: (json['length'] as num).toDouble(),
       name: (json['name'] as String?) ?? '',
       state: st,
-      oneway: json['oneway'] as bool? ?? false,
+      direction: direction,
+      roadClass: rClass,
+      permittedFromNode: json['permitted_from'] as int?,
+      permittedToNode: json['permitted_to'] as int?,
       geometry: geom,
     );
   }
@@ -169,11 +232,15 @@ class GraphEdge {
         'name': name,
         'state': state.name,
         'current_congestion': currentCongestion,
+        'direction': direction.name,
+        'road_class': roadClass.name,
         'oneway': oneway,
+        'permitted_from': permittedFromNode,
+        'permitted_to': permittedToNode,
         'geometry': geometry,
       };
 
   @override
   String toString() =>
-      'GraphEdge($from -> $to, len: ${length}m, state: ${state.name}, cong: ${currentCongestion.toStringAsFixed(1)})';
+      'GraphEdge($from -> $to, len: ${length}m, class: ${roadClass.name}, dir: ${direction.name}, state: ${state.name}, cong: ${currentCongestion.toStringAsFixed(1)})';
 }

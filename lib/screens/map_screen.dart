@@ -685,6 +685,9 @@ class _MapScreenState extends State<MapScreen> {
 
   Widget _buildLegendCard(BuildContext context, MapColors mapColors, bool isLight) {
     final theme = Theme.of(context);
+    final headerColor = isLight ? theme.colorScheme.onSurfaceVariant : Colors.white70;
+    final textColor = isLight ? theme.colorScheme.onSurface : Colors.white;
+
     return Card(
       color: isLight ? theme.colorScheme.surface : const Color(0xEE1A2230),
       elevation: isLight ? 2 : 4,
@@ -701,45 +704,146 @@ class _MapScreenState extends State<MapScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'TRAFFIC LEGEND',
+              'ROAD TYPES',
               style: TextStyle(
-                color: isLight ? theme.colorScheme.onSurfaceVariant : Colors.white70,
-                fontSize: 10,
+                color: headerColor,
+                fontSize: 9,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
               ),
             ),
+            const SizedBox(height: 5),
+            _buildTypeRow(
+              lineHeight: 4.5,
+              color: mapColors.openRoad,
+              label: 'Major (1.0x spd)',
+              textColor: textColor,
+            ),
+            const SizedBox(height: 4),
+            _buildTypeRow(
+              lineHeight: 2.0,
+              color: mapColors.openRoad,
+              label: 'Minor (0.6x spd)',
+              textColor: textColor,
+            ),
+            const SizedBox(height: 4),
+            _buildOneWayRow(
+              color: mapColors.openRoad,
+              label: 'One-Way (arrow)',
+              textColor: textColor,
+              isLight: isLight,
+            ),
             const SizedBox(height: 6),
+            Divider(
+              height: 1,
+              thickness: 0.5,
+              color: isLight ? theme.colorScheme.outlineVariant : Colors.white24,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'CONGESTION',
+              style: TextStyle(
+                color: headerColor,
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 5),
             _buildLegendRow(
               mapColors.openRoad,
               'Open (1x)',
               isDashed: false,
-              textColor: isLight ? theme.colorScheme.onSurface : Colors.white,
+              textColor: textColor,
             ),
             const SizedBox(height: 4),
             _buildLegendRow(
               mapColors.moderateRoad,
               'Moderate (2x)',
               isDashed: false,
-              textColor: isLight ? theme.colorScheme.onSurface : Colors.white,
+              textColor: textColor,
             ),
             const SizedBox(height: 4),
             _buildLegendRow(
               mapColors.heavyRoad,
               'Heavy (4x)',
               isDashed: false,
-              textColor: isLight ? theme.colorScheme.onSurface : Colors.white,
+              textColor: textColor,
             ),
             const SizedBox(height: 4),
             _buildLegendRow(
               mapColors.blockedRoad,
               'Blocked',
               isDashed: true,
-              textColor: isLight ? theme.colorScheme.onSurface : Colors.white,
+              textColor: textColor,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTypeRow({
+    required double lineHeight,
+    required Color color,
+    required String label,
+    required Color textColor,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 22,
+          height: 6,
+          child: Center(
+            child: Container(
+              height: lineHeight,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(color: textColor, fontSize: 11),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOneWayRow({
+    required Color color,
+    required String label,
+    required Color textColor,
+    required bool isLight,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 22,
+          height: 8,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(height: 2.2, color: color),
+              Icon(
+                Icons.arrow_right,
+                size: 14,
+                color: isLight ? const Color(0xFF1E293B) : Colors.white,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(color: textColor, fontSize: 11),
+        ),
+      ],
     );
   }
 

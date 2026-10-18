@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import '../config/constants.dart';
 import '../models/graph_edge.dart';
 import '../models/road_graph.dart';
 import 'haversine.dart';
@@ -39,12 +40,16 @@ class _PriorityItem {
 /// Pure Dart implementation of A* search and Dijkstra's algorithm.
 ///
 /// Heuristic Admissibility:
-///   The heuristic h(n) is the straight-line Haversine distance from node n to the goal.
-///   Because road length is >= straight-line distance, and every edge congestion
-///   factor is strictly >= 1.0 (enforced by AppConstants.minCongestionFactor),
-///   the minimum edge cost is length * 1.0 = length >= straight-line distance.
+///   The heuristic h(n) is the straight-line Haversine distance from node n to the goal
+///   divided by the maximum class factor (AppConstants.maxClassSpeedFactor = 1.0).
+///   For any edge, the true travel cost is:
+///     edge_cost = (edge_length / classSpeedFactor) * congestionFactor
+///   Because road length is >= straight-line Euclidean distance,
+///   classSpeedFactor <= maxClassSpeedFactor (1.0) so (1 / classSpeedFactor >= 1 / maxClassSpeedFactor),
+///   and congestionFactor >= 1.0 (with blocked roads having infinite cost),
+///   the minimum edge cost is always >= (straight-line distance / maxClassSpeedFactor).
 ///   Therefore, h(n) never overestimates the actual remaining cost, ensuring that
-///   A* is strictly admissible and optimal.
+///   A* remains strictly admissible and optimal.
 class AStarRouter {
   /// Computes the optimal least-congested route using A* search.
   static RouteResult? findRoute({
@@ -119,12 +124,13 @@ class AStarRouter {
 
     gScore[startNodeId] = 0.0;
     final initialH = useHeuristic
-        ? Haversine.distanceMeters(
-            startNode.lat,
-            startNode.lon,
-            goalNode.lat,
-            goalNode.lon,
-          )
+        ? (Haversine.distanceMeters(
+              startNode.lat,
+              startNode.lon,
+              goalNode.lat,
+              goalNode.lon,
+            ) /
+            AppConstants.maxClassSpeedFactor)
         : 0.0;
 
     openQueue.add(
@@ -162,7 +168,7 @@ class AStarRouter {
 
       final outgoingEdges = graph.adjacency[currentId] ?? const <GraphEdge>[];
       for (final edge in outgoingEdges) {
-        // Skip blocked roads (congestion factor >= 50.0)
+        // Skip blocked roads
         if (edge.isBlocked) {
           continue;
         }
@@ -174,7 +180,7 @@ class AStarRouter {
         final neighborNode = graph.nodes[neighborId];
         if (neighborNode == null) continue;
 
-        // Effective edge cost = length * congestion factor
+        // Effective edge cost = (length / classSpeedFactor) * congestion factor
         final edgeCost = edge.effectiveCost;
         final tentativeG = currentItem.gScore + edgeCost;
 
@@ -184,12 +190,13 @@ class AStarRouter {
           cameFrom[neighborId] = _CameFromEntry(parentId: currentId, edge: edge);
 
           final h = useHeuristic
-              ? Haversine.distanceMeters(
-                  neighborNode.lat,
-                  neighborNode.lon,
-                  goalNode.lat,
-                  goalNode.lon,
-                )
+              ? (Haversine.distanceMeters(
+                    neighborNode.lat,
+                    neighborNode.lon,
+                    goalNode.lat,
+                    goalNode.lon,
+                  ) /
+                  AppConstants.maxClassSpeedFactor)
               : 0.0;
 
           final f = tentativeG + h;
@@ -271,12 +278,33 @@ class AStarRouter {
       final v = routeNodeIds[i + 1];
       final edge = graph.getEdge(u, v);
       if (edge == null) {
+        final reverseEdge = graph.getEdge(v, u);
+        if (reverseEdge != null && reverseEdge.direction == RoadDirection.oneWay) {
+          if (throwOnError) {
+            throw AssertionError(
+              'One-way violation: route moves against permitted direction from node $u to node $v (permitted: $v -> $u)',
+            );
+          }
+          return false;
+        }
         if (throwOnError) {
           throw AssertionError(
             'Phantom edge detected: no edge exists between node $u and node $v',
           );
         }
         return false;
+      }
+
+      if (edge.direction == RoadDirection.oneWay) {
+        if (edge.permittedFromNode != null &&
+            (edge.permittedFromNode != u || edge.permittedToNode != v)) {
+          if (throwOnError) {
+            throw AssertionError(
+              'One-way violation: route moves against permitted direction from node $u to node $v',
+            );
+          }
+          return false;
+        }
       }
 
       if (edge.isBlocked) {

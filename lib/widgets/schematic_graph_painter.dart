@@ -323,22 +323,24 @@ class SchematicGraphPainter extends CustomPainter {
       Color roadColor;
       double strokeWidth;
 
+      final isMajor = edge.isMajor;
+
       switch (edge.state) {
         case RoadState.open:
           roadColor = mapColors.openRoad;
-          strokeWidth = compact ? 1.5 : 2.5;
+          strokeWidth = isMajor ? (compact ? 2.5 : 4.5) : (compact ? 1.4 : 2.2);
           break;
         case RoadState.moderate:
           roadColor = mapColors.moderateRoad;
-          strokeWidth = compact ? 2.2 : 3.5;
+          strokeWidth = isMajor ? (compact ? 3.2 : 5.5) : (compact ? 1.8 : 3.0);
           break;
         case RoadState.heavy:
           roadColor = mapColors.heavyRoad;
-          strokeWidth = compact ? 2.8 : 4.2;
+          strokeWidth = isMajor ? (compact ? 3.8 : 6.5) : (compact ? 2.2 : 3.6);
           break;
         case RoadState.blocked:
           roadColor = mapColors.blockedRoad;
-          strokeWidth = compact ? 2.0 : 3.5;
+          strokeWidth = isMajor ? (compact ? 3.0 : 5.0) : (compact ? 1.8 : 3.0);
           break;
       }
 
@@ -366,6 +368,11 @@ class SchematicGraphPainter extends CustomPainter {
         );
       } else {
         canvas.drawLine(p1, p2, roadPaint);
+      }
+
+      // Draw direction arrow for one-way roads
+      if (edge.direction == RoadDirection.oneWay) {
+        _drawOneWayArrow(canvas, p1, p2, compact, mapColors);
       }
     }
 
@@ -736,6 +743,54 @@ class SchematicGraphPainter extends CustomPainter {
       canvas.drawLine(Offset(startX, startY), Offset(endX, endY), paint);
       currentDist += dashLength + dashSpace;
     }
+  }
+
+  void _drawOneWayArrow(
+    Canvas canvas,
+    Offset fromPt,
+    Offset toPt,
+    bool compact,
+    MapColors mapColors,
+  ) {
+    final dx = toPt.dx - fromPt.dx;
+    final dy = toPt.dy - fromPt.dy;
+    final dist = math.sqrt(dx * dx + dy * dy);
+    if (dist < 18.0) return;
+
+    final ux = dx / dist;
+    final uy = dy / dist;
+    final nx = -uy;
+    final ny = ux;
+
+    final arrowLen = compact ? 4.5 : 7.0;
+    final arrowHalfW = compact ? 3.0 : 4.5;
+
+    final midX = fromPt.dx + dx * 0.5;
+    final midY = fromPt.dy + dy * 0.5;
+
+    final tip = Offset(midX + ux * arrowLen * 0.6, midY + uy * arrowLen * 0.6);
+    final left = Offset(midX - ux * arrowLen * 0.4 + nx * arrowHalfW, midY - uy * arrowLen * 0.4 + ny * arrowHalfW);
+    final indent = Offset(midX - ux * arrowLen * 0.1, midY - uy * arrowLen * 0.1);
+    final right = Offset(midX - ux * arrowLen * 0.4 - nx * arrowHalfW, midY - uy * arrowLen * 0.4 - ny * arrowHalfW);
+
+    final path = Path()
+      ..moveTo(tip.dx, tip.dy)
+      ..lineTo(left.dx, left.dy)
+      ..lineTo(indent.dx, indent.dy)
+      ..lineTo(right.dx, right.dy)
+      ..close();
+
+    final isLight = mapColors.background == MapColors.light.background;
+    final fillPaint = Paint()
+      ..color = Colors.white.withValues(alpha: isLight ? 0.95 : 0.9)
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(path, fillPaint);
+
+    final borderPaint = Paint()
+      ..color = isLight ? const Color(0xFF334155).withValues(alpha: 0.8) : Colors.black54
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8;
+    canvas.drawPath(path, borderPaint);
   }
 
   void _drawText({

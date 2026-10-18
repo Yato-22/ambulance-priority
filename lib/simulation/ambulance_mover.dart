@@ -168,17 +168,20 @@ class AmbulanceMover {
       );
     }
 
-    // Determine current edge congestion factor to modulate nominal speed
+    // Determine current edge congestion factor and road class speed factor to modulate nominal speed
     double nominalSpeed = baseSpeedMps;
     if (graph != null && current.currentEdgeFrom != null && current.currentEdgeTo != null) {
       final edge = graph.getEdge(current.currentEdgeFrom!, current.currentEdgeTo!) ??
           graph.getEdge(current.currentEdgeTo!, current.currentEdgeFrom!);
-      if (edge != null && edge.currentCongestion > 1.0) {
-        nominalSpeed = baseSpeedMps / math.sqrt(edge.currentCongestion);
-        nominalSpeed = nominalSpeed.clamp(
-          (AppConstants.minSpeedKmh / 3.6),
-          baseSpeedMps,
-        );
+      if (edge != null) {
+        nominalSpeed = baseSpeedMps * edge.classSpeedFactor;
+        if (edge.currentCongestion > 1.0) {
+          nominalSpeed = nominalSpeed / math.sqrt(edge.currentCongestion);
+          nominalSpeed = nominalSpeed.clamp(
+            (AppConstants.minSpeedKmh / 3.6) * edge.classSpeedFactor,
+            baseSpeedMps * edge.classSpeedFactor,
+          );
+        }
       }
     }
 

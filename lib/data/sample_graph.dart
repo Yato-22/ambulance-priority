@@ -131,7 +131,76 @@ class SampleGraphBuilder {
       }
     }
 
-    // 4. Build Directed GraphEdges with lengths, street names, and base congestion
+    // 4. Classify Roads as Major vs Minor
+    // Main grid corridors: horizontal rows 0, 2, 5, vertical columns 1, 3, 5, plus diagonal shortcuts
+    bool isMajorRoad(int u, int v) {
+      final uR = (u - 1) ~/ cols;
+      final uC = (u - 1) % cols;
+      final vR = (v - 1) ~/ cols;
+      final vC = (v - 1) % cols;
+
+      // Diagonals
+      if (uR != vR && uC != vC) return true;
+      // Main arterial rows (Hospital access corridors and central corridor)
+      if (uR == vR && (uR == 0 || uR == 2 || uR == 5)) return true;
+      // Main arterial columns
+      if (uC == vC && (uC == 1 || uC == 3 || uC == 5)) return true;
+
+      return false;
+    }
+
+    // 5. Select roughly 20% of roads as one-way while strictly preserving strong connectivity
+    final directedAdj = <int, List<int>>{};
+    for (int i = 1; i <= totalNodes; i++) {
+      directedAdj[i] = [];
+    }
+    for (final pair in activeEdges) {
+      final u = pair.first;
+      final v = pair.last;
+      directedAdj[u]!.add(v);
+      directedAdj[v]!.add(u);
+    }
+
+    final targetOneWays = (activeEdges.length * 0.20).round();
+    final oneWayRoads = <String, List<int>>{}; // roadKey -> [fromNode, toNode]
+
+    // Candidates to try making one-way: minor streets deterministically shuffled
+    final candidatesForOneWay = activeEdges
+        .where((e) => !isMajorRoad(e.first, e.last))
+        .toList();
+
+    candidatesForOneWay.shuffle(rng);
+
+    for (final pair in candidatesForOneWay) {
+      if (oneWayRoads.length >= targetOneWays) break;
+
+      final u = pair.first;
+      final v = pair.last;
+      final forwardFirst = rng.nextBool();
+      final fromCandidate = forwardFirst ? u : v;
+      final toCandidate = forwardFirst ? v : u;
+
+      // Try direction: fromCandidate -> toCandidate (remove reverse edge: toCandidate -> fromCandidate)
+      directedAdj[toCandidate]!.remove(fromCandidate);
+
+      if (_isStronglyConnected(directedAdj, totalNodes)) {
+        oneWayRoads[RoadGraph.roadKey(u, v)] = [fromCandidate, toCandidate];
+      } else {
+        // Restore
+        directedAdj[toCandidate]!.add(fromCandidate);
+
+        // Try opposite direction: toCandidate -> fromCandidate
+        directedAdj[fromCandidate]!.remove(toCandidate);
+        if (_isStronglyConnected(directedAdj, totalNodes)) {
+          oneWayRoads[RoadGraph.roadKey(u, v)] = [toCandidate, fromCandidate];
+        } else {
+          // Restore (keep two-way)
+          directedAdj[fromCandidate]!.add(toCandidate);
+        }
+      }
+    }
+
+    // 6. Build Directed GraphEdges with lengths, street names, road classes, and directions
     final edges = <GraphEdge>[];
     final adjacency = <int, List<GraphEdge>>{};
     for (final n in nodes.keys) {
@@ -164,38 +233,71 @@ class SampleGraphBuilder {
       final roadName = streetNames[nameIndex % streetNames.length];
       nameIndex++;
 
-      // All roads start as RoadState.open (grey)
-      final e1 = GraphEdge(
-        from: u,
-        to: v,
-        length: length,
-        name: roadName,
-        state: RoadState.open,
-        geometry: [
-          [uNode.lat, uNode.lon],
-          [vNode.lat, vNode.lon]
-        ],
-      );
+      final key = RoadGraph.roadKey(u, v);
+      final isMajor = isMajorRoad(u, v);
+      final roadClass = isMajor ? RoadClass.major : RoadClass.minor;
+      final oneWayInfo = oneWayRoads[key];
 
-      final e2 = GraphEdge(
-        from: v,
-        to: u,
-        length: length,
-        name: roadName,
-        state: RoadState.open,
-        geometry: [
-          [vNode.lat, vNode.lon],
-          [uNode.lat, uNode.lon]
-        ],
-      );
+      if (oneWayInfo != null) {
+        final fromNodeId = oneWayInfo[0];
+        final toNodeId = oneWayInfo[1];
+        final fromNode = nodes[fromNodeId]!;
+        final toNode = nodes[toNodeId]!;
 
-      edges.add(e1);
-      edges.add(e2);
-      adjacency[u]!.add(e1);
-      adjacency[v]!.add(e2);
+        final e = GraphEdge(
+          from: fromNodeId,
+          to: toNodeId,
+          length: length,
+          name: roadName,
+          state: RoadState.open,
+          direction: RoadDirection.oneWay,
+          roadClass: roadClass,
+          permittedFromNode: fromNodeId,
+          permittedToNode: toNodeId,
+          geometry: [
+            [fromNode.lat, fromNode.lon],
+            [toNode.lat, toNode.lon]
+          ],
+        );
+        edges.add(e);
+        adjacency[fromNodeId]!.add(e);
+      } else {
+        final e1 = GraphEdge(
+          from: u,
+          to: v,
+          length: length,
+          name: roadName,
+          state: RoadState.open,
+          direction: RoadDirection.twoWay,
+          roadClass: roadClass,
+          geometry: [
+            [uNode.lat, uNode.lon],
+            [vNode.lat, vNode.lon]
+          ],
+        );
+
+        final e2 = GraphEdge(
+          from: v,
+          to: u,
+          length: length,
+          name: roadName,
+          state: RoadState.open,
+          direction: RoadDirection.twoWay,
+          roadClass: roadClass,
+          geometry: [
+            [vNode.lat, vNode.lon],
+            [uNode.lat, uNode.lon]
+          ],
+        );
+
+        edges.add(e1);
+        edges.add(e2);
+        adjacency[u]!.add(e1);
+        adjacency[v]!.add(e2);
+      }
     }
 
-    // 5. Place 2 Hospitals on opposite ends of the grid
+    // 7. Place 2 Hospitals on opposite ends of the grid
     // H1: "City Hospital" at Node 1 (Row 0, Col 0 - top left)
     // H2: "Lifeline Hospital" at Node 42 (Row 5, Col 6 - bottom right)
     final hospitals = [
@@ -220,6 +322,8 @@ class SampleGraphBuilder {
         'signals': 12,
         'hospitals': 2,
         'seed': 42,
+        'one_way_count': oneWayRoads.length,
+        'two_way_count': activeEdges.length - oneWayRoads.length,
       },
       nodes: nodes,
       edges: edges,
@@ -228,7 +332,55 @@ class SampleGraphBuilder {
     );
   }
 
-  /// Verifies that all [totalNodes] are reachable using simple breadth-first search.
+  /// Verifies strong connectivity for directed travel: every junction can reach every other junction.
+  static bool _isStronglyConnected(Map<int, List<int>> directedAdj, int totalNodes) {
+    // 1. Forward reachability from node 1
+    final visitedForward = <int>{};
+    final queueForward = <int>[1];
+    visitedForward.add(1);
+
+    while (queueForward.isNotEmpty) {
+      final curr = queueForward.removeAt(0);
+      for (final next in directedAdj[curr] ?? const <int>[]) {
+        if (!visitedForward.contains(next)) {
+          visitedForward.add(next);
+          queueForward.add(next);
+        }
+      }
+    }
+
+    if (visitedForward.length != totalNodes) return false;
+
+    // 2. Backward reachability to node 1 (using reversed edges)
+    final revAdj = <int, List<int>>{};
+    for (int i = 1; i <= totalNodes; i++) {
+      revAdj[i] = [];
+    }
+    for (final entry in directedAdj.entries) {
+      final u = entry.key;
+      for (final v in entry.value) {
+        revAdj[v]?.add(u);
+      }
+    }
+
+    final visitedBackward = <int>{};
+    final queueBackward = <int>[1];
+    visitedBackward.add(1);
+
+    while (queueBackward.isNotEmpty) {
+      final curr = queueBackward.removeAt(0);
+      for (final next in revAdj[curr] ?? const <int>[]) {
+        if (!visitedBackward.contains(next)) {
+          visitedBackward.add(next);
+          queueBackward.add(next);
+        }
+      }
+    }
+
+    return visitedBackward.length == totalNodes;
+  }
+
+  /// Verifies that all [totalNodes] are reachable using simple breadth-first search on undirected edges.
   static bool _isFullyConnected(List<Set<int>> activeEdges, int totalNodes) {
     final adj = <int, List<int>>{};
     for (int i = 1; i <= totalNodes; i++) {
